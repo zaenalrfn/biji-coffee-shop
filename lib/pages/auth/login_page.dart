@@ -1,7 +1,79 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/constants/api_constants.dart';
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscureText = true;
+
+  Future<void> _login() async {
+    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConstants.loginEndpoint),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        // Success
+        final token = data['access_token'];
+        if (token != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('access_token', token);
+
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        }
+      } else {
+        // Error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Login failed')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +122,7 @@ class LoginPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
+                        "Welcome back! Please enter your details to continue.",
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.black54,
@@ -59,7 +131,7 @@ class LoginPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 28),
                       const Text(
-                        "Username",
+                        "Email", // Changed from Username to match API requirement
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.black54,
@@ -67,6 +139,7 @@ class LoginPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       TextField(
+                        controller: _emailController,
                         decoration: InputDecoration(
                           hintText: "info@example.com",
                           contentPadding: const EdgeInsets.symmetric(
@@ -91,13 +164,24 @@ class LoginPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       TextField(
-                        obscureText: true,
+                        controller: _passwordController,
+                        obscureText: _obscureText,
                         decoration: InputDecoration(
                           hintText: "Password",
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 18, horizontal: 16),
-                          suffixIcon: Icon(Icons.visibility_off_outlined,
-                              color: Colors.grey.shade600),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: Colors.grey.shade600),
+                            onPressed: () {
+                              setState(() {
+                                _obscureText = !_obscureText;
+                              });
+                            },
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: const BorderSide(color: Colors.black26),
@@ -119,17 +203,22 @@ class LoginPage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          },
-                          child: const Text(
-                            "LOGIN",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
+                          onPressed: _isLoading ? null : _login,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Text(
+                                  "LOGIN",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 16),
@@ -201,7 +290,8 @@ class LoginPage extends StatelessWidget {
                             ),
                           ),
                           onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/register');
+                            Navigator.pushReplacementNamed(
+                                context, '/register');
                           },
                           child: Text(
                             "CREATE AN ACCOUNT",

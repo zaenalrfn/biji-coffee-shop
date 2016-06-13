@@ -1,7 +1,86 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/constants/api_constants.dart';
 
-class RegisterPage extends StatelessWidget {
+class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
+
+  @override
+  State<RegisterPage> createState() => _RegisterPageState();
+}
+
+class _RegisterPageState extends State<RegisterPage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  bool _isLoading = false;
+  bool _obscureText = true;
+
+  Future<void> _register() async {
+    if (_usernameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please fill in all fields')),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse(ApiConstants.registerEndpoint),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'name': _usernameController
+              .text, // Backend expects 'name' or 'username' - check mismatch logic. Based on Postman sample: "username": "testuser" in request body
+          'username': _usernameController
+              .text, // Sending both just in case, typically Laravel Auth defaults to 'name' but Postman had 'username'
+          'email': _emailController.text,
+          'password': _passwordController.text,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        // Success
+        final token = data['access_token'];
+        if (token != null) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('access_token', token);
+
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        }
+      } else {
+        // Error
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'] ?? 'Registration failed')),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +128,7 @@ class RegisterPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor",
+                        "Create new account to access full features",
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.black54,
@@ -66,8 +145,9 @@ class RegisterPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       TextField(
+                        controller: _usernameController,
                         decoration: InputDecoration(
-                          hintText: "Roberto Karlos",
+                          hintText: "Enter your username",
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 18, horizontal: 16),
                           border: OutlineInputBorder(
@@ -90,6 +170,7 @@ class RegisterPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       TextField(
+                        controller: _emailController,
                         decoration: InputDecoration(
                           hintText: "Email Address",
                           contentPadding: const EdgeInsets.symmetric(
@@ -114,13 +195,24 @@ class RegisterPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       TextField(
-                        obscureText: true,
+                        controller: _passwordController,
+                        obscureText: _obscureText,
                         decoration: InputDecoration(
                           hintText: "Password",
                           contentPadding: const EdgeInsets.symmetric(
                               vertical: 18, horizontal: 16),
-                          suffixIcon: Icon(Icons.visibility_off_outlined,
-                              color: Colors.grey.shade600),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                                _obscureText
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                                color: Colors.grey.shade600),
+                            onPressed: () {
+                              setState(() {
+                                _obscureText = !_obscureText;
+                              });
+                            },
+                          ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(14),
                             borderSide: const BorderSide(color: Colors.black26),
@@ -142,17 +234,22 @@ class RegisterPage extends StatelessWidget {
                               borderRadius: BorderRadius.circular(14),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.pushReplacementNamed(context, '/home');
-                          },
-                          child: const Text(
-                            "REGISTER",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w600,
-                              letterSpacing: 0.8,
-                            ),
-                          ),
+                          onPressed: _isLoading ? null : _register,
+                          child: _isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                      color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Text(
+                                  "REGISTER",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.8,
+                                  ),
+                                ),
                         ),
                       ),
                       const SizedBox(height: 16),
