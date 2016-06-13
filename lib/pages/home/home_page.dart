@@ -7,6 +7,7 @@ import 'widgets/featured_beverages_section.dart';
 
 import 'package:provider/provider.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/banner_provider.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -16,19 +17,18 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  int _selectedIndex = 0;
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<ProductProvider>(context, listen: false)
-          .fetchProductsAndCategories();
-    });
-  }
+      final productProvider =
+          Provider.of<ProductProvider>(context, listen: false);
+      final bannerProvider =
+          Provider.of<BannerProvider>(context, listen: false);
 
-  void _onNavTap(int index) {
-    setState(() => _selectedIndex = index);
+      productProvider.fetchProductsAndCategories();
+      bannerProvider.fetchBanners();
+    });
   }
 
   @override
@@ -36,8 +36,11 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: Colors.white,
       bottomNavigationBar: CustomBottomNav(
-        currentIndex: _selectedIndex,
-        onTap: _onNavTap,
+        currentIndex: 0,
+        onTap: (index) {
+          // Navigation is handled inside CustomBottomNav.
+          // We don't need to update state here because other items open new pages.
+        },
       ),
       body: SafeArea(
         child: SingleChildScrollView(

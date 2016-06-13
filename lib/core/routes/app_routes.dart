@@ -37,6 +37,15 @@ import '../../pages/profile/edit_profile_page.dart';
 import '../../pages/admin/manage_products_page.dart';
 import '../../pages/admin/add_edit_product_page.dart';
 import '../../data/models/product_model.dart';
+
+// Category Management
+import '../../pages/admin/manage_categories_page.dart';
+import '../../pages/admin/add_edit_category_page.dart';
+import '../../data/models/category_model.dart';
+// Banner Management
+import '../../pages/admin/manage_banners_page.dart';
+import '../../pages/admin/add_edit_banner_page.dart';
+import '../../data/models/banner_model.dart';
 // =========================================================
 
 class AppRoutes {
@@ -76,6 +85,10 @@ class AppRoutes {
   // Admin
   static const String manageProducts = '/manage-products';
   static const String addEditProduct = '/add-edit-product';
+  static const String manageCategories = '/manage-categories';
+  static const String addEditCategory = '/add-edit-category';
+  static const String manageBanners = '/manage-banners';
+  static const String addEditBanner = '/add-edit-banner';
   // ==========================================================
 
   // =================== GENERATE ROUTE =======================
@@ -160,6 +173,20 @@ class AppRoutes {
         final args = settings.arguments as Product?;
         return MaterialPageRoute(
             builder: (_) => AddEditProductPage(product: args));
+
+      case manageCategories:
+        return MaterialPageRoute(builder: (_) => const ManageCategoriesPage());
+      case addEditCategory:
+        final args = settings.arguments as Category?;
+        return MaterialPageRoute(
+            builder: (_) => AddEditCategoryPage(category: args));
+
+      case manageBanners:
+        return MaterialPageRoute(builder: (_) => const ManageBannersPage());
+      case addEditBanner:
+        final args = settings.arguments as BannerModel?;
+        return MaterialPageRoute(
+            builder: (_) => AddEditBannerPage(banner: args));
 
       // ===== Default (404 Page) =====
       default:

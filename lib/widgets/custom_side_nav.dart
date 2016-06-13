@@ -61,11 +61,42 @@ class CustomSideNav extends StatelessWidget {
                     route: AppRoutes.home,
                   ),
                   if (isAdmin)
-                    _buildMenuItem(
-                      context,
-                      icon: Icons.inventory_2_outlined,
-                      title: 'Kelola Produk',
-                      route: AppRoutes.manageProducts,
+                    ExpansionTile(
+                      leading: const Icon(Icons.store_mall_directory,
+                          color: Colors.black54),
+                      title: const Text(
+                        'Kelola Toko',
+                        style: TextStyle(fontSize: 14, color: Colors.black87),
+                      ),
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: _buildMenuItem(
+                            context,
+                            icon: Icons.inventory_2_outlined,
+                            title: 'Kelola Produk',
+                            route: AppRoutes.manageProducts,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: _buildMenuItem(
+                            context,
+                            icon: Icons.category_outlined,
+                            title: 'Kelola Kategori',
+                            route: AppRoutes.manageCategories,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: _buildMenuItem(
+                            context,
+                            icon: Icons.view_carousel_outlined,
+                            title: 'Kelola Banner',
+                            route: AppRoutes.manageBanners,
+                          ),
+                        ),
+                      ],
                     ),
                   _buildMenuItem(
                     context,

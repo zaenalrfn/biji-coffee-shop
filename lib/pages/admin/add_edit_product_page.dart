@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb; // Needed for web check
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,9 +20,10 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
   late TextEditingController _titleController;
   late TextEditingController _subtitleController;
   late TextEditingController _priceController;
+  late TextEditingController _imageUrlController; // Logic baru: Controller URL
 
   int? _selectedCategoryId;
-  XFile? _selectedImage; // Changed to XFile
+  XFile? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -32,6 +33,7 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
     _titleController = TextEditingController(text: p?.name ?? '');
     _subtitleController = TextEditingController(text: p?.description ?? '');
     _priceController = TextEditingController(text: p?.price.toString() ?? '');
+    _imageUrlController = TextEditingController(); // Init URL controller
     _selectedCategoryId = p?.categoryId;
   }
 
@@ -40,6 +42,7 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
     _titleController.dispose();
     _subtitleController.dispose();
     _priceController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -48,7 +51,8 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
         await _picker.pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
       setState(() {
-        _selectedImage = pickedFile; // Store XFile directly
+        _selectedImage = pickedFile;
+        _imageUrlController.clear(); // Clear URL if file picked
       });
     }
   }
@@ -70,6 +74,7 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
       'subtitle': _subtitleController.text.trim(),
       'price': _priceController.text.trim(),
       'category_id': _selectedCategoryId.toString(),
+      'image_url': _imageUrlController.text.trim(), // Kirim URL ke backend
     };
 
     try {
@@ -95,26 +100,41 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
   }
 
   Widget _buildImagePreview() {
+    // 1. Jika ada file yang dipilih via gallery
     if (_selectedImage != null) {
       if (kIsWeb) {
-        // Web: Use network/blob
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.network(_selectedImage!.path, fit: BoxFit.cover),
         );
       } else {
-        // Mobile/Desktop: Use Image.file
         return ClipRRect(
           borderRadius: BorderRadius.circular(12),
           child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
         );
       }
-    } else if (widget.product?.imageUrl != null) {
+    }
+    // 2. Jika user input URL manual, kita coba tampilkan
+    else if (_imageUrlController.text.isNotEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          _imageUrlController.text,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, error, stackTrace) =>
+              const Center(child: Icon(Icons.broken_image, color: Colors.grey)),
+        ),
+      );
+    }
+    // 3. Jika ini mode edit dan ada URL dari database
+    else if (widget.product?.imageUrl != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(12),
         child: Image.network(widget.product!.imageUrl!, fit: BoxFit.cover),
       );
-    } else {
+    }
+    // 4. Default placeholder
+    else {
       return const Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -160,6 +180,13 @@ class _AddEditProductPageState extends State<AddEditProductPage> {
                     child: _buildImagePreview(),
                   ),
                 ),
+              ),
+              const SizedBox(height: 16),
+              // Input URL Image
+              TextFormField(
+                controller: _imageUrlController,
+                decoration: _inputDecoration('Image URL (Optional)'),
+                onChanged: (_) => setState(() {}), // Refresh preview
               ),
               const SizedBox(height: 24),
               TextFormField(

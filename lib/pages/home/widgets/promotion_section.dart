@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../providers/banner_provider.dart';
 
 class PromotionSection extends StatelessWidget {
   const PromotionSection({super.key});
@@ -37,21 +39,35 @@ class PromotionSection extends StatelessWidget {
         // 🔹 Area swipe — gambar keluar padding
         SizedBox(
           height: 190,
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              return OverflowBox(
-                maxWidth:
-                    constraints.maxWidth + 3, // nambah 16 kiri + 16 kanan
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  clipBehavior: Clip.none, // biar gak ke-clip
-                  children: [
-                    _promoCard(),
-                    _promoCard(),
-                    _promoCard(),
-                  ],
-                ),
+          child: Consumer<BannerProvider>(
+            builder: (context, provider, child) {
+              if (provider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (provider.banners.isEmpty) {
+                // Return generic banner if empty or just empty container
+                return const Center(child: Text("No Promotions Available"));
+              }
+
+              return LayoutBuilder(
+                builder: (context, constraints) {
+                  return OverflowBox(
+                    maxWidth:
+                        constraints.maxWidth + 3, // nambah 16 kiri + 16 kanan
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      clipBehavior: Clip.none, // biar gak ke-clip
+                      itemCount: provider.banners.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 16),
+                      itemBuilder: (context, index) {
+                        final banner = provider.banners[index];
+                        return _promoCard(banner.imageUrl);
+                      },
+                    ),
+                  );
+                },
               );
             },
           ),
@@ -60,16 +76,24 @@ class PromotionSection extends StatelessWidget {
     );
   }
 
-  Widget _promoCard() {
+  Widget _promoCard(String? imageUrl) {
     return Container(
       width: 325,
-      margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        image: const DecorationImage(
-          image: AssetImage("assets/images/promosi.png"),
-          fit: BoxFit.cover,
-        ),
+        color: Colors.grey[300], // Placeholder color
+        image: (imageUrl != null && imageUrl.isNotEmpty)
+            ? DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+                onError:
+                    (_, __) {}, // Handle error silently or show placeholder
+              )
+            : const DecorationImage(
+                image:
+                    AssetImage("assets/images/promosi.png"), // Fallback/Default
+                fit: BoxFit.cover,
+              ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.12),

@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
 import '../models/category_model.dart';
 import '../models/product_model.dart';
+import '../models/banner_model.dart';
 import '../models/cart_item_model.dart';
 import '../models/order_model.dart';
 import 'package:image_picker/image_picker.dart'; // Import XFile
@@ -160,6 +162,163 @@ class ApiService {
       return list.map((e) => Category.fromJson(e)).toList();
     } else {
       throw Exception('Failed to load categories');
+    }
+  }
+
+  Future<Category> createCategory(String name) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/categories'),
+      headers: headers,
+      body: jsonEncode({'name': name}),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      // Adjust based on typical Laravel resource response: { data: {...} } or direct {...}
+      final catData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return Category.fromJson(catData);
+    } else {
+      throw Exception('Failed to create category: ${response.body}');
+    }
+  }
+
+  Future<Category> updateCategory(int id, String name) async {
+    final headers = await _getHeaders();
+    final response = await http.put(
+      Uri.parse('${ApiConstants.baseUrl}/categories/$id'),
+      headers: headers,
+      body: jsonEncode({'name': name}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final catData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return Category.fromJson(catData);
+    } else {
+      throw Exception('Failed to update category: ${response.body}');
+    }
+  }
+
+  Future<void> deleteCategory(int id) async {
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/categories/$id'),
+      headers: headers,
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete category: ${response.body}');
+    }
+  }
+
+  // ================= BANNERS =================
+
+  Future<List<BannerModel>> getBanners() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/banners'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List list =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return list.map((e) => BannerModel.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load banners');
+    }
+  }
+
+  Future<BannerModel> createBanner({
+    required String name,
+    File? imageFile,
+    String? imageUrl,
+  }) async {
+    final headers = await _getHeaders();
+    final uri = Uri.parse('${ApiConstants.baseUrl}/banners');
+
+    var request = http.MultipartRequest('POST', uri);
+    request.headers.addAll(headers);
+    request.fields['name'] = name;
+
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      request.fields['image_url'] = imageUrl;
+    }
+
+    if (imageFile != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        imageFile.path,
+      ));
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final bannerData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return BannerModel.fromJson(bannerData);
+    } else {
+      throw Exception('Failed to create banner: ${response.body}');
+    }
+  }
+
+  Future<BannerModel> updateBanner({
+    required int id,
+    required String name,
+    File? imageFile,
+    String? imageUrl,
+  }) async {
+    final headers = await _getHeaders();
+    // Note: Use POST with _method=PUT or straight PUT if endpoints support multipart on PUT.
+    // Laravel often needs POST with _method=PUT for multipart updates.
+    // Postman collection says POST for Update Banner.
+    final uri = Uri.parse('${ApiConstants.baseUrl}/banners/$id');
+
+    var request = http.MultipartRequest('POST', uri);
+    request.headers.addAll(headers);
+    request.fields['name'] = name;
+    // Removed _method = PUT as per user feedback (Endpoint is POST)
+
+    if (imageUrl != null && imageUrl.isNotEmpty) {
+      request.fields['image_url'] = imageUrl;
+    }
+
+    if (imageFile != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        imageFile.path,
+      ));
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final bannerData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return BannerModel.fromJson(bannerData);
+    } else {
+      throw Exception('Failed to update banner: ${response.body}');
+    }
+  }
+
+  Future<void> deleteBanner(int id) async {
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/banners/$id'),
+      headers: headers,
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete banner: ${response.body}');
     }
   }
 

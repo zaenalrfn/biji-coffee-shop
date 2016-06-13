@@ -96,4 +96,60 @@ class ProductProvider with ChangeNotifier {
       notifyListeners();
     }
   }
+
+  // ================= CATEGORY CRUD =================
+
+  Future<void> addCategory(String name) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final newCategory = await _apiService.createCategory(name);
+      _categories.add(newCategory);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding category: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> editCategory(int id, String name) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final updatedCategory = await _apiService.updateCategory(id, name);
+      final index = _categories.indexWhere((c) => c.id == id);
+      if (index != -1) {
+        _categories[index] = updatedCategory;
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Error updating category: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteCategory(int id) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _apiService.deleteCategory(id);
+      _categories.removeWhere((c) => c.id == id);
+      notifyListeners();
+    } catch (e) {
+      print('Error deleting category: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 }
