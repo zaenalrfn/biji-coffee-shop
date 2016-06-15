@@ -183,7 +183,8 @@ class AppRoutes {
           settings: settings, // IMPORTANT: Pass arguments!
         );
       case orderReview:
-        return MaterialPageRoute(builder: (_) => const OrderReviewPage());
+        final order = settings.arguments as Order;
+        return MaterialPageRoute(builder: (_) => OrderReviewPage(order: order));
 
       // ===== Lokasi Toko =====
       case storeLocation:

@@ -428,7 +428,34 @@ class _CartPageState extends State<CartPage>
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],
-                  )
+                  ),
+                  // Add Rate Button if Completed
+                  if (order.status == 'completed') ...[
+                    const Divider(),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () {
+                          Navigator.pushNamed(
+                            context,
+                            AppRoutes.orderReview,
+                            arguments: order,
+                          );
+                        },
+                        style: OutlinedButton.styleFrom(
+                          side: const BorderSide(color: Color(0xFF3E2B47)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text("Rate & Review",
+                            style: TextStyle(
+                              color: Color(0xFF3E2B47),
+                              fontWeight: FontWeight.bold,
+                            )),
+                      ),
+                    )
+                  ]
                 ],
               ),
             );

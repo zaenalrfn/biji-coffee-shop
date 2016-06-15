@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../data/models/order_model.dart';
 
 class OrderReviewPage extends StatefulWidget {
-  const OrderReviewPage({super.key});
+  final Order order;
+  const OrderReviewPage({super.key, required this.order});
 
   @override
   State<OrderReviewPage> createState() => _OrderReviewPageState();
@@ -11,14 +14,63 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
   int _rating = 4; // default rating 4 bintang (3.0 dari 5)
   final TextEditingController _reviewController = TextEditingController();
 
+  // ================= KONFIGURASI GOOGLE FORM =================
+  // Masukkan Link Google Form (bagian sebelum tanda ?)
+  final String _formBaseUrl =
+      'https://docs.google.com/forms/d/e/1FAIpQLSea9uO4vlm3smngK8U3wi26GgM1BxjUe6TS3H9MlyX0eMcAMQ/viewform';
+
+  // Masukkan ID Entry (Dari link pre-filled)
+  final String _entryOrderNumber = 'entry.2147381539'; // ID Order Number
+  final String _entryRating = 'entry.2104360282'; // ID Rating (1-5)
+  final String _entryReview = 'entry.337778148'; // ID Review
+  // ==========================================================
+
   @override
   void dispose() {
     _reviewController.dispose();
     super.dispose();
   }
 
+  Future<void> _launchGoogleForm() async {
+    try {
+      // Encode data biar aman di URL
+      final orderId = Uri.encodeComponent(widget.order.orderNumber.isNotEmpty
+          ? widget.order.orderNumber
+          : widget.order.id.toString());
+      final rating = Uri.encodeComponent(_rating.toString());
+      final review = Uri.encodeComponent(_reviewController.text);
+
+      // Susun URL Lengkap
+      final fullUrl = '$_formBaseUrl?usp=pp_url'
+          '&$_entryOrderNumber=$orderId'
+          '&$_entryRating=$rating'
+          '&$_entryReview=$review';
+
+      final url = Uri.parse(fullUrl);
+
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gagal membuka Google Form')),
+          );
+        }
+      }
+    } catch (e) {
+      print('Error launching URL: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    // Use first product for display
+    final firstItem =
+        (widget.order.items != null && widget.order.items!.isNotEmpty)
+            ? widget.order.items!.first
+            : null;
+    final product = firstItem?.product;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -37,12 +89,6 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {},
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -64,20 +110,29 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(20),
-                        child: Image.asset(
-                          'assets/images/product2.jpg',
-                          fit: BoxFit.cover,
-                        ),
+                        child: (product != null && product.imageUrl != null)
+                            ? Image.network(
+                                product.imageUrl!,
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.broken_image),
+                              )
+                            : Image.asset(
+                                'assets/images/placeholder.png', // Fallback
+                                fit: BoxFit.cover,
+                                errorBuilder: (_, __, ___) =>
+                                    const Icon(Icons.image),
+                              ),
                       ),
                     ),
 
                     const SizedBox(height: 16),
 
                     // Product Name
-                    const Text(
-                      'Brewed Coppuccino Latte with\nCreamy Milk',
+                    Text(
+                      product?.name ?? 'Order #${widget.order.orderNumber}',
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.black,
@@ -87,9 +142,9 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
 
                     const SizedBox(height: 8),
 
-                    // Category
+                    // Category / Price
                     Text(
-                      'Breverages',
+                      'Rp ${widget.order.totalPrice.toStringAsFixed(0)}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -108,7 +163,7 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
 
               // What do you think?
               const Text(
-                'What do you think?',
+                'Bagaimana pengalamanmu?',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
@@ -120,7 +175,7 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
 
               // Description
               Text(
-                'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod',
+                'Berikan penilaianmu tentang kualitas produk dan layanan kami agar kami dapat terus berkembang menjadi lebih baik.',
                 style: TextStyle(
                   fontSize: 13,
                   color: Colors.grey.shade600,
@@ -158,7 +213,7 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
 
                   // Score
                   Text(
-                    '${(_rating * 0.6 + 0.4).toStringAsFixed(1)}',
+                    _rating.toDouble().toStringAsFixed(1), // Fix logic here
                     style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w700,
@@ -219,13 +274,15 @@ class _OrderReviewPageState extends State<OrderReviewPage> {
           onPressed: () {
             // Handle submit review
             if (_reviewController.text.isNotEmpty) {
+              _launchGoogleForm(); // Launch Google Form
+              /*
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Review submitted successfully!'),
+                  content: Text('Redirecting to Google Form...'),
                   backgroundColor: Colors.green,
                 ),
               );
-              Navigator.pop(context);
+              */
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

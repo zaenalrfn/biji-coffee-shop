@@ -964,9 +964,12 @@ class ApiService {
       final data = jsonDecode(response.body);
       // Handle different possible response formats
       if (data is Map && data.containsKey('points')) {
-        return data['points'] as int;
-      } else if (data is Map && data.containsKey('data')) {
-        return data['data']['points'] as int;
+        return int.tryParse(data['points'].toString()) ?? 0;
+      } else if (data is Map &&
+          data.containsKey('data') &&
+          data['data'] is Map &&
+          data['data'].containsKey('points')) {
+        return int.tryParse(data['data']['points'].toString()) ?? 0;
       }
       return 0;
     } else {
