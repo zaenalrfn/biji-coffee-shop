@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-
 import 'forgot_password_page.dart';
+import 'google_login_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -44,6 +44,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // Added back Guest Login
   Future<void> _loginGuest() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.loginGuest();
@@ -262,28 +263,37 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          InkWell(
+                          GestureDetector(
                             onTap: () async {
-                              final authProvider = Provider.of<AuthProvider>(
-                                  context,
-                                  listen: false);
-                              await authProvider.loginWithGoogle();
+                              final bool? success = await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const GoogleLoginScreen()),
+                              );
+                              if (success == true) {
+                                if (context.mounted) {
+                                  // Refresh user verification
+                                  final authProvider =
+                                      Provider.of<AuthProvider>(context,
+                                          listen: false);
+                                  await authProvider.checkLoginStatus();
+                                  if (context.mounted &&
+                                      authProvider.isAuthenticated) {
+                                    Navigator.pushReplacementNamed(
+                                        context, '/home');
+                                  }
+                                }
+                              }
                             },
-                            borderRadius: BorderRadius.circular(50),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: Colors.grey.shade300),
-                              ),
-                              child: Image.network(
-                                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png",
-                                width: 24,
-                                height: 24,
-                              ),
+                            child: Image.network(
+                              "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png",
+                              width: 32,
+                              height: 32,
                             ),
                           ),
                           const SizedBox(width: 28),
+                          // Facebook replaced with Guest Login
                           InkWell(
                             onTap: _loginGuest,
                             child: Container(
