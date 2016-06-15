@@ -699,13 +699,19 @@ class ApiService {
   }
 
   // Admin: Update Order Status
-  Future<Order> updateOrderStatus(int id, String status) async {
+  Future<Order> updateOrderStatus(int id, String status,
+      {String? paymentStatus}) async {
     final headers = await _getHeaders();
+    final body = {
+      'status': status,
+      if (paymentStatus != null) 'payment_status': paymentStatus,
+    };
+
     final response = await http.post(
       Uri.parse(
           '${ApiConstants.baseUrl}/admin/orders/$id'), // Corrected Endpoint
       headers: headers,
-      body: jsonEncode({'status': status}),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200) {

@@ -4,12 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; // Import XFile
+import 'package:url_launcher/url_launcher.dart'; // Added for Google Login
 import '../data/services/api_service.dart';
 import '../data/services/auth_service.dart'; // Add this
 import '../data/models/user_model.dart';
 import '../core/constants/api_constants.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
