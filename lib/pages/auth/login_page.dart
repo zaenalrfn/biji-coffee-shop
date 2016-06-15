@@ -262,10 +262,26 @@ class _LoginPageState extends State<LoginPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Image.network(
-                            "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png",
-                            width: 32,
-                            height: 32,
+                          InkWell(
+                            onTap: () async {
+                              final authProvider = Provider.of<AuthProvider>(
+                                  context,
+                                  listen: false);
+                              await authProvider.loginWithGoogle();
+                            },
+                            borderRadius: BorderRadius.circular(50),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Image.network(
+                                "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png",
+                                width: 24,
+                                height: 24,
+                              ),
+                            ),
                           ),
                           const SizedBox(width: 28),
                           InkWell(
