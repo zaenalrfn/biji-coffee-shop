@@ -84,9 +84,9 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  Future<void> addToCart(int productId, int quantity) async {
+  Future<void> addToCart(int productId, int quantity, {String? size}) async {
     try {
-      await _apiService.addToCart(productId, quantity);
+      await _apiService.addToCart(productId, quantity, size: size);
       await fetchCart(); // Refresh cart
     } catch (e) {
       print('Error adding to cart: $e');

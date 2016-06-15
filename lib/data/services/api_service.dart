@@ -45,6 +45,22 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> loginGuest() async {
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/login/guest'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to login as guest: ${response.body}');
+    }
+  }
+
   Future<Map<String, dynamic>> register(
       String name, String email, String password) async {
     final response = await http.post(
@@ -564,12 +580,18 @@ class ApiService {
     }
   }
 
-  Future<void> addToCart(int productId, int quantity) async {
+  Future<void> addToCart(int productId, int quantity, {String? size}) async {
     final headers = await _getHeaders();
+    final body = {
+      'product_id': productId,
+      'quantity': quantity,
+      if (size != null) 'size': size,
+    };
+
     final response = await http.post(
       Uri.parse('${ApiConstants.baseUrl}/cart'),
       headers: headers,
-      body: jsonEncode({'product_id': productId, 'quantity': quantity}),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {

@@ -385,7 +385,7 @@ class _CartPageState extends State<CartPage>
                         ),
                       ),
                       Text(
-                        "\$${order.totalPrice.toStringAsFixed(2)}",
+                        "Rp ${order.totalPrice.toStringAsFixed(0)}",
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 16),
                       ),
@@ -514,11 +514,24 @@ class _CartPageState extends State<CartPage>
                                   overflow: TextOverflow.ellipsis,
                                 ),
 
+                                if (item.size != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 4),
+                                    child: Text(
+                                      "Size: ${item.size}",
+                                      style: TextStyle(
+                                        color: Colors.brown[400],
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+
                                 const SizedBox(height: 4),
 
                                 // 2. Harga Satuan
                                 Text(
-                                  "\$${product.price}",
+                                  "Rp ${product.price.toStringAsFixed(0)}",
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w500,
                                     color: Colors.grey,
@@ -593,7 +606,7 @@ class _CartPageState extends State<CartPage>
 
                                     // Total Price only
                                     Text(
-                                      "\$${(product.price * item.quantity).toStringAsFixed(1)}",
+                                      "Rp ${(product.price * item.quantity).toStringAsFixed(0)}",
                                       style: const TextStyle(
                                         fontWeight: FontWeight.w700,
                                         color: Colors.black,

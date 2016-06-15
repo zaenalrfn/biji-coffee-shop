@@ -83,6 +83,57 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> loginGuest() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.loginGuest();
+      // Assuming response has 'access_token' similar to login
+      if (response.containsKey('access_token')) {
+        final token = response['access_token'];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', token);
+
+        // Try to get user data from response or fetch it
+        // If it's a guest, maybe backend returns a specific structure or we fetch /user which returns guest info
+        // For robustness, let's assume we fetch /user or fallback
+        try {
+          if (response.containsKey('user')) {
+            _user = User.fromJson(response['user']);
+          } else {
+            _user = await _apiService.getUser();
+          }
+        } catch (e) {
+          // If fetching user fails (maybe guest endpoint doesn't return full user), use dummy
+          _user = User(
+              id: 0,
+              name: 'Guest',
+              email: 'guest@biji.coffee',
+              roles: ['guest']);
+        }
+
+        if (_user != null) {
+          await _saveUserLocally(_user!);
+        }
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _isLoading = false;
+      _errorMessage = 'No access token';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> register(String name, String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
