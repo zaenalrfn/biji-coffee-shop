@@ -13,7 +13,7 @@ class CheckoutStepper extends StatelessWidget implements PreferredSizeWidget {
     this.onBack,
   }) : super(key: key);
 
-  static const _labels = ['Shipping Address', 'Payment Method', 'Coupon Apply'];
+  static const _labels = ['Shipping Address', 'Coupon Apply', 'Payment Method'];
 
   @override
   Widget build(BuildContext context) {
