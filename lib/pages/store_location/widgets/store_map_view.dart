@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import '../store_location_page.dart';
+import '../../../data/models/store_model.dart';
 
 class StoreMapView extends StatefulWidget {
   final List<StoreModel> stores;
@@ -220,21 +220,30 @@ class _MapStoreCard extends StatelessWidget {
                     topLeft: Radius.circular(16),
                     topRight: Radius.circular(16),
                   ),
-                  child: Image.asset(
-                    store.image,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(
-                        color: const Color(0xFFF5F5F5),
-                        child: const Icon(
-                          Icons.store,
-                          size: 40,
-                          color: Color(0xFFD9D9D9),
+                  child: store.image != null
+                      ? Image.network(
+                          store.image!,
+                          width: double.infinity,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Container(
+                              color: const Color(0xFFF5F5F5),
+                              child: const Icon(
+                                Icons.store,
+                                size: 40,
+                                color: Color(0xFFD9D9D9),
+                              ),
+                            );
+                          },
+                        )
+                      : Container(
+                          color: const Color(0xFFF5F5F5),
+                          child: const Icon(
+                            Icons.store,
+                            size: 40,
+                            color: Color(0xFFD9D9D9),
+                          ),
                         ),
-                      );
-                    },
-                  ),
                 ),
                 Positioned(
                   bottom: 8,
@@ -300,7 +309,7 @@ class _MapStoreCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 3),
                       Text(
-                        '${store.distance} Km',
+                        '${store.distance?.toStringAsFixed(1) ?? '-'} Km',
                         style: const TextStyle(
                           fontSize: 11,
                           color: Color(0xFF6B6B6B),

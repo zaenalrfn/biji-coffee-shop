@@ -47,14 +47,33 @@ class HeaderSection extends StatelessWidget {
             child: Stack(
               clipBehavior: Clip.none,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    "assets/images/profile1.jpg",
-                    width: 45,
-                    height: 45,
-                    fit: BoxFit.cover,
-                  ),
+                Consumer<AuthProvider>(
+                  builder: (context, auth, _) {
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: auth.user?.profilePhotoUrl != null
+                          ? Image.network(
+                              auth.user!.profilePhotoUrl!,
+                              width: 45,
+                              height: 45,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Image.asset(
+                                  "assets/images/profile1.jpg",
+                                  width: 45,
+                                  height: 45,
+                                  fit: BoxFit.cover,
+                                );
+                              },
+                            )
+                          : Image.asset(
+                              "assets/images/profile1.jpg",
+                              width: 45,
+                              height: 45,
+                              fit: BoxFit.cover,
+                            ),
+                    );
+                  },
                 ),
                 Positioned(
                   top: -5,

@@ -78,8 +78,8 @@ class CategorySection extends StatelessWidget {
                                     right: -10,
                                     bottom: -10,
                                     child: Icon(
-                                      Icons
-                                          .coffee, // Default icon since API might not return icon data
+                                      _getIconData(
+                                          category.iconName), // Dynamic Icon
                                       size: 100,
                                       color: Colors.white.withOpacity(0.1),
                                     ),
@@ -91,7 +91,7 @@ class CategorySection extends StatelessWidget {
                                           CrossAxisAlignment.start,
                                       children: [
                                         Icon(
-                                          Icons.coffee,
+                                          _getIconData(category.iconName),
                                           color: Colors.white,
                                           size: 30,
                                         ),
@@ -129,5 +129,32 @@ class CategorySection extends StatelessWidget {
         );
       },
     );
+  }
+
+  IconData _getIconData(String? iconName) {
+    switch (iconName) {
+      case 'coffee':
+        return Icons.coffee;
+      case 'local_cafe':
+        return Icons.local_cafe;
+      case 'fastfood':
+        return Icons.fastfood;
+      case 'cake':
+        return Icons.cake;
+      case 'icecream':
+        return Icons.icecream;
+      case 'local_bar':
+        return Icons.local_bar;
+      case 'local_pizza':
+        return Icons.local_pizza;
+      case 'restaurant':
+        return Icons.restaurant;
+      case 'bakery_dining':
+        return Icons.bakery_dining;
+      case 'local_drink':
+        return Icons.local_drink;
+      default:
+        return Icons.coffee; // Default fallback
+    }
   }
 }

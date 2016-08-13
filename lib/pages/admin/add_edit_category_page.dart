@@ -15,11 +15,34 @@ class AddEditCategoryPage extends StatefulWidget {
 class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
+  String? _selectedIconName;
+
+  final Map<String, IconData> _availableIcons = {
+    'coffee': Icons.coffee,
+    'local_cafe': Icons.local_cafe,
+    'fastfood': Icons.fastfood,
+    'cake': Icons.cake,
+    'icecream': Icons.icecream,
+    'local_bar': Icons.local_bar,
+    'local_pizza': Icons.local_pizza,
+    'restaurant': Icons.restaurant,
+    'bakery_dining': Icons.bakery_dining,
+    'local_drink': Icons.local_drink,
+  };
 
   @override
   void initState() {
     super.initState();
     _nameController = TextEditingController(text: widget.category?.name ?? '');
+
+    // Check if category has iconName and if it exists in our map
+    if (widget.category?.iconName != null &&
+        _availableIcons.containsKey(widget.category!.iconName)) {
+      _selectedIconName = widget.category!.iconName;
+    } else {
+      // Default or null if adding
+      _selectedIconName = null;
+    }
   }
 
   @override
@@ -37,9 +60,15 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
     try {
       if (isEdit) {
         await provider.editCategory(
-            widget.category!.id, _nameController.text.trim());
+          widget.category!.id,
+          _nameController.text.trim(),
+          iconName: _selectedIconName, // Pass selected icon
+        );
       } else {
-        await provider.addCategory(_nameController.text.trim());
+        await provider.addCategory(
+          _nameController.text.trim(),
+          iconName: _selectedIconName, // Pass selected icon
+        );
       }
 
       if (mounted) {
@@ -77,11 +106,12 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
             color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18),
       ),
       backgroundColor: Colors.white,
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Form(
           key: _formKey,
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               TextFormField(
                 controller: _nameController,
@@ -101,6 +131,40 @@ class _AddEditCategoryPageState extends State<AddEditCategoryPage> {
                 validator: (val) =>
                     val == null || val.isEmpty ? 'Required' : null,
               ),
+              const SizedBox(height: 24),
+
+              // Dropdown for Icon
+              DropdownButtonFormField<String>(
+                value: _selectedIconName,
+                decoration: InputDecoration(
+                  labelText: 'Select Icon',
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                items: _availableIcons.entries.map((entry) {
+                  return DropdownMenuItem<String>(
+                    value: entry.key,
+                    child: Row(
+                      children: [
+                        Icon(entry.value, color: const Color(0xFF6E4C77)),
+                        const SizedBox(width: 10),
+                        Text(entry.key),
+                      ],
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  setState(() {
+                    _selectedIconName = value;
+                  });
+                },
+                hint: const Text('Choose an icon for this category'),
+              ),
+
               const SizedBox(height: 32),
               SizedBox(
                 width: double.infinity,

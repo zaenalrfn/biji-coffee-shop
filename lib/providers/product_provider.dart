@@ -99,40 +99,38 @@ class ProductProvider with ChangeNotifier {
 
   // ================= CATEGORY CRUD =================
 
-  Future<void> addCategory(String name) async {
+  Future<void> addCategory(String name, {String? iconName}) async {
     _isLoading = true;
     notifyListeners();
-
     try {
-      final newCategory = await _apiService.createCategory(name);
+      final newCategory =
+          await _apiService.createCategory(name, iconName: iconName);
       _categories.add(newCategory);
-      notifyListeners();
-    } catch (e) {
-      print('Error adding category: $e');
-      rethrow;
-    } finally {
       _isLoading = false;
       notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
     }
   }
 
-  Future<void> editCategory(int id, String name) async {
+  Future<void> editCategory(int id, String name, {String? iconName}) async {
     _isLoading = true;
     notifyListeners();
-
     try {
-      final updatedCategory = await _apiService.updateCategory(id, name);
+      final updatedCategory =
+          await _apiService.updateCategory(id, name, iconName: iconName);
       final index = _categories.indexWhere((c) => c.id == id);
       if (index != -1) {
         _categories[index] = updatedCategory;
       }
-      notifyListeners();
-    } catch (e) {
-      print('Error updating category: $e');
-      rethrow;
-    } finally {
       _isLoading = false;
       notifyListeners();
+    } catch (e) {
+      _isLoading = false;
+      notifyListeners();
+      rethrow;
     }
   }
 

@@ -6,6 +6,7 @@ import '../models/user_model.dart';
 import '../models/category_model.dart';
 import '../models/product_model.dart';
 import '../models/banner_model.dart';
+import '../models/store_model.dart';
 import '../models/cart_item_model.dart';
 import '../models/order_model.dart';
 import 'package:image_picker/image_picker.dart'; // Import XFile
@@ -89,21 +90,38 @@ class ApiService {
     }
   }
 
-  Future<User> updateProfile(String name, String email) async {
-    final headers = await _getHeaders();
-    final response = await http.put(
-      Uri.parse('${ApiConstants.baseUrl}/user'),
-      headers: headers,
-      body: jsonEncode({
-        'name': name,
-        'email': email,
-      }),
-    );
+  Future<User> updateProfile(String name, String email, File? imageFile) async {
+    final token = await getToken();
+    // Using POST with _method: PUT is standard for Laravel file uploads on update
+    var uri = Uri.parse('${ApiConstants.baseUrl}/user');
+    // If the route is specifically POST for update, we don't need _method: PUT.
+    // But usually /user is PUT. Laravel can't handle multipart on PUT directly.
+    // So we use POST and spoof PUT.
+    var request = http.MultipartRequest('POST', uri);
+
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
+
+    request.fields['name'] = name;
+    request.fields['email'] = email;
+    request.fields['_method'] = 'PUT'; // Method spoofing
+
+    if (imageFile != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'image', // Field name expected by backend
+        imageFile.path,
+      ));
+    }
+
+    final streamdResponse = await request.send();
+    final response = await http.Response.fromStream(streamdResponse);
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      // Depending on API response structure, user might be in data['user'] or just data
-      // Based on user PROMPT: 'user' => $user
+      // Ensure we parse the user correctly. Sometimes it's directly in data or data['data'] or data['user']
+      // Based on previous code: return User.fromJson(data['user']);
       return User.fromJson(data['user']);
     } else {
       throw Exception('Failed to update profile: ${response.body}');
@@ -165,17 +183,19 @@ class ApiService {
     }
   }
 
-  Future<Category> createCategory(String name) async {
+  Future<Category> createCategory(String name, {String? iconName}) async {
     final headers = await _getHeaders();
     final response = await http.post(
       Uri.parse('${ApiConstants.baseUrl}/categories'),
       headers: headers,
-      body: jsonEncode({'name': name}),
+      body: jsonEncode({
+        'name': name,
+        'icon_name': iconName, // Send to backend
+      }),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      // Adjust based on typical Laravel resource response: { data: {...} } or direct {...}
       final catData =
           (data is Map && data.containsKey('data')) ? data['data'] : data;
       return Category.fromJson(catData);
@@ -184,12 +204,16 @@ class ApiService {
     }
   }
 
-  Future<Category> updateCategory(int id, String name) async {
+  Future<Category> updateCategory(int id, String name,
+      {String? iconName}) async {
     final headers = await _getHeaders();
     final response = await http.put(
       Uri.parse('${ApiConstants.baseUrl}/categories/$id'),
       headers: headers,
-      body: jsonEncode({'name': name}),
+      body: jsonEncode({
+        'name': name,
+        'icon_name': iconName, // Send to backend
+      }),
     );
 
     if (response.statusCode == 200) {
@@ -319,6 +343,127 @@ class ApiService {
 
     if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete banner: ${response.body}');
+    }
+  }
+
+  // ================= STORE CRUD =================
+  Future<List<StoreModel>> getStores() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/stores'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List storesData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return storesData.map((e) => StoreModel.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load stores: ${response.body}');
+    }
+  }
+
+  Future<StoreModel> createStore({
+    required String name,
+    required String address,
+    required double latitude,
+    required double longitude,
+    required String openTime,
+    required String closeTime,
+    File? imageFile,
+  }) async {
+    final token = await getToken();
+    var uri = Uri.parse('${ApiConstants.baseUrl}/stores');
+    var request = http.MultipartRequest('POST', uri);
+
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
+
+    request.fields['name'] = name;
+    request.fields['address'] = address;
+    request.fields['latitude'] = latitude.toString();
+    request.fields['longitude'] = longitude.toString();
+    request.fields['open_time'] = openTime;
+    request.fields['close_time'] = closeTime;
+
+    if (imageFile != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        imageFile.path,
+      ));
+    }
+
+    final streamdResponse = await request.send();
+    final response = await http.Response.fromStream(streamdResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final storeData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return StoreModel.fromJson(storeData);
+    } else {
+      throw Exception('Failed to create store: ${response.body}');
+    }
+  }
+
+  Future<StoreModel> updateStore({
+    required int id,
+    required String name,
+    required String address,
+    required double latitude,
+    required double longitude,
+    required String openTime,
+    required String closeTime,
+    File? imageFile,
+  }) async {
+    final token = await getToken();
+    var uri = Uri.parse('${ApiConstants.baseUrl}/stores/$id');
+    var request = http.MultipartRequest('POST', uri);
+
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
+
+    request.fields['name'] = name;
+    request.fields['address'] = address;
+    request.fields['latitude'] = latitude.toString();
+    request.fields['longitude'] = longitude.toString();
+    request.fields['open_time'] = openTime;
+    request.fields['close_time'] = closeTime;
+
+    if (imageFile != null) {
+      request.files.add(await http.MultipartFile.fromPath(
+        'image',
+        imageFile.path,
+      ));
+    }
+
+    final streamdResponse = await request.send();
+    final response = await http.Response.fromStream(streamdResponse);
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final storeData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return StoreModel.fromJson(storeData);
+    } else {
+      throw Exception('Failed to update store: ${response.body}');
+    }
+  }
+
+  Future<void> deleteStore(int id) async {
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/stores/$id'),
+      headers: headers,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete store: ${response.body}');
     }
   }
 

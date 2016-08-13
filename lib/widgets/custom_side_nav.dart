@@ -96,6 +96,15 @@ class CustomSideNav extends StatelessWidget {
                             route: AppRoutes.manageBanners,
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: _buildMenuItem(
+                            context,
+                            icon: Icons.store_outlined,
+                            title: 'Kelola Toko Cabang',
+                            route: AppRoutes.manageStores,
+                          ),
+                        ),
                       ],
                     ),
                   _buildMenuItem(

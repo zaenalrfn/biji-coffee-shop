@@ -225,6 +225,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             arguments: {
                               'name': user?.name ?? '',
                               'email': user?.email ?? '',
+                              'profilePhotoUrl': user?.profilePhotoUrl,
                             },
                           );
                         }),
@@ -277,19 +278,74 @@ class _ProfilePageState extends State<ProfilePage> {
                                       final imagePath = rawImage ??
                                           'assets/images/placeholder.png';
 
-                                      return Padding(
-                                        padding:
-                                            const EdgeInsets.only(bottom: 16),
-                                        child: _buildFavouriteMenu(
-                                          image: imagePath,
-                                          title: product.name,
-                                          category:
-                                              product.categoryName ?? 'Unknown',
-                                          price: '\$${product.price}',
-                                          rating:
-                                              '5.0', // No rating in model yet, default to 5.0
-                                          isNetworkImage: rawImage != null &&
-                                              (rawImage.startsWith('http')),
+                                      return Dismissible(
+                                        key: Key(item.id.toString()),
+                                        direction: DismissDirection.endToStart,
+                                        background: Container(
+                                          alignment: Alignment.centerRight,
+                                          padding:
+                                              const EdgeInsets.only(right: 20),
+                                          decoration: BoxDecoration(
+                                            color: Colors.redAccent,
+                                            borderRadius:
+                                                BorderRadius.circular(16),
+                                          ),
+                                          child: const Icon(Icons.delete,
+                                              color: Colors.white),
+                                        ),
+                                        onDismissed: (direction) async {
+                                          try {
+                                            setState(() {
+                                              _wishlistItems.removeAt(index);
+                                            });
+                                            await _wishlistService
+                                                .removeFromWishlist(product.id);
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(const SnackBar(
+                                                      content: Text(
+                                                          'Item removed from wishlist')));
+                                            }
+                                          } catch (e) {
+                                            _fetchWishlist();
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(SnackBar(
+                                                      content: Text(
+                                                          'Failed to remove: $e')));
+                                            }
+                                          }
+                                        },
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            Navigator.pushNamed(
+                                              context,
+                                              '/product-detail', // Match AppRoutes
+                                              arguments: {
+                                                'id': product.id,
+                                                'title': product.name,
+                                                'price': product.price,
+                                                'image': product.imageUrl,
+                                                'description':
+                                                    product.description,
+                                              },
+                                            );
+                                          },
+                                          child: Padding(
+                                            padding: const EdgeInsets.only(
+                                                bottom: 16),
+                                            child: _buildFavouriteMenu(
+                                              image: imagePath,
+                                              title: product.name,
+                                              category: product.categoryName ??
+                                                  'Unknown',
+                                              price: '\$${product.price}',
+                                              rating: '5.0',
+                                              isNetworkImage: rawImage !=
+                                                      null &&
+                                                  (rawImage.startsWith('http')),
+                                            ),
+                                          ),
                                         ),
                                       );
                                     },

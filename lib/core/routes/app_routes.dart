@@ -12,6 +12,7 @@ import '../../pages/cart/cart_page.dart';
 import '../../pages/rewards/rewards_page.dart';
 import '../../pages/profile/profile_page.dart';
 import '../../pages/products/products_page.dart';
+import '../../pages/products/detail_product_page.dart';
 import '../../pages/wishlist/wishlist_page.dart';
 // Halaman notifikasi
 import '../../pages/notification/notification_page.dart';
@@ -46,6 +47,10 @@ import '../../data/models/category_model.dart';
 import '../../pages/admin/manage_banners_page.dart';
 import '../../pages/admin/add_edit_banner_page.dart';
 import '../../data/models/banner_model.dart';
+// Store Management
+import '../../pages/admin/manage_stores_page.dart';
+import '../../pages/admin/add_edit_store_page.dart';
+import '../../data/models/store_model.dart';
 // =========================================================
 
 class AppRoutes {
@@ -63,6 +68,7 @@ class AppRoutes {
   static const String rewards = '/rewards';
   static const String profile = '/profile';
   static const String products = '/products';
+  static const String productDetail = '/product-detail';
   static const String notifications = '/notifications';
   //Wishlist
   static const String wishlist = '/wishlist';
@@ -89,6 +95,8 @@ class AppRoutes {
   static const String addEditCategory = '/add-edit-category';
   static const String manageBanners = '/manage-banners';
   static const String addEditBanner = '/add-edit-banner';
+  static const String manageStores = '/manage-stores';
+  static const String addEditStore = '/add-edit-store';
   // ==========================================================
 
   // =================== GENERATE ROUTE =======================
@@ -118,6 +126,10 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const ProfilePage());
       case products:
         return MaterialPageRoute(builder: (_) => const ProductsPage());
+      case productDetail:
+        final args = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+            builder: (_) => ProductDetailPage(product: args));
 //==== Wishlist ====
       case wishlist:
         return MaterialPageRoute(builder: (_) => const WishlistPage());
@@ -163,6 +175,7 @@ class AppRoutes {
           builder: (_) => EditProfilePage(
             initialName: args?['name'] ?? '',
             initialEmail: args?['email'] ?? '',
+            initialPhotoUrl: args?['profilePhotoUrl'],
           ),
         );
 
@@ -187,6 +200,12 @@ class AppRoutes {
         final args = settings.arguments as BannerModel?;
         return MaterialPageRoute(
             builder: (_) => AddEditBannerPage(banner: args));
+
+      case manageStores:
+        return MaterialPageRoute(builder: (_) => const ManageStoresPage());
+      case addEditStore:
+        final args = settings.arguments as StoreModel?;
+        return MaterialPageRoute(builder: (_) => AddEditStorePage(store: args));
 
       // ===== Default (404 Page) =====
       default:

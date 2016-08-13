@@ -3,32 +3,9 @@ import 'widgets/store_card.dart';
 import 'widgets/store_map_view.dart';
 import 'widgets/view_toggle.dart';
 
-// Model Store
-class StoreModel {
-  final String id;
-  final String name;
-  final String image;
-  final String openTime;
-  final String closeTime;
-  final double distance;
-  final double latitude;
-  final double longitude;
-  final String address;
-
-  StoreModel({
-    required this.id,
-    required this.name,
-    required this.image,
-    required this.openTime,
-    required this.closeTime,
-    required this.distance,
-    required this.latitude,
-    required this.longitude,
-    required this.address,
-  });
-
-  String get operatingHours => '$openTime - $closeTime';
-}
+import 'package:provider/provider.dart';
+import '../../data/models/store_model.dart';
+import '../../providers/store_provider.dart';
 
 class StoreLocationPage extends StatefulWidget {
   const StoreLocationPage({super.key});
@@ -40,52 +17,12 @@ class StoreLocationPage extends StatefulWidget {
 class _StoreLocationPageState extends State<StoreLocationPage> {
   bool isListView = true;
 
-  final List<StoreModel> stores = [
-    StoreModel(
-      id: '1',
-      name: 'Medan Plaza',
-      image: 'assets/images/store.png',
-      openTime: '09:00 AM',
-      closeTime: '10:00 PM',
-      distance: 3.5,
-      latitude: -7.2575,
-      longitude: 110.4108,
-      address: 'Jl. Medan Plaza No. 123',
-    ),
-    StoreModel(
-      id: '2',
-      name: 'Center Point',
-      image: 'assets/images/store.png',
-      openTime: '09:00 AM',
-      closeTime: '10:00 PM',
-      distance: 7.5,
-      latitude: -7.2585,
-      longitude: 110.4128,
-      address: 'Jl. Center Point No. 456',
-    ),
-    StoreModel(
-      id: '3',
-      name: 'Coffe Shope',
-      image: 'assets/images/store.png',
-      openTime: '09:00 AM',
-      closeTime: '10:00 PM',
-      distance: 3.5,
-      latitude: -7.2595,
-      longitude: 110.4088,
-      address: 'Jl. Coffee Street No. 789',
-    ),
-    StoreModel(
-      id: '4',
-      name: 'Medan Plaza',
-      image: 'assets/images/store.png',
-      openTime: '09:00 AM',
-      closeTime: '10:00 PM',
-      distance: 3.5,
-      latitude: -7.2565,
-      longitude: 110.4148,
-      address: 'Jl. Medan Plaza 2 No. 321',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(
+        () => Provider.of<StoreProvider>(context, listen: false).fetchStores());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -115,31 +52,43 @@ class _StoreLocationPageState extends State<StoreLocationPage> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.only(top: 16, bottom: 20),
-            child: ViewToggle(
-              isListView: isListView,
-              onToggle: (value) {
-                setState(() {
-                  isListView = value;
-                });
-              },
-            ),
-          ),
-          Expanded(
-            child: isListView
-                ? _buildListView()
-                : StoreMapView(stores: stores),
-          ),
-        ],
+      body: Consumer<StoreProvider>(
+        builder: (context, provider, child) {
+          if (provider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (provider.stores.isEmpty) {
+            return const Center(child: Text('No store locations found'));
+          }
+
+          return Column(
+            children: [
+              Container(
+                color: Colors.white,
+                padding: const EdgeInsets.only(top: 16, bottom: 20),
+                child: ViewToggle(
+                  isListView: isListView,
+                  onToggle: (value) {
+                    setState(() {
+                      isListView = value;
+                    });
+                  },
+                ),
+              ),
+              Expanded(
+                child: isListView
+                    ? _buildListView(provider.stores)
+                    : StoreMapView(stores: provider.stores),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
-  Widget _buildListView() {
+  Widget _buildListView(List<StoreModel> stores) {
     return ListView.separated(
       padding: const EdgeInsets.all(20),
       itemCount: stores.length,

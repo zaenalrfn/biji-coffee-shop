@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../store_location_page.dart';
+import '../../../data/models/store_model.dart';
 
 class StoreCard extends StatelessWidget {
   final StoreModel store;
@@ -32,24 +32,35 @@ class StoreCard extends StatelessWidget {
               topLeft: Radius.circular(20),
               bottomLeft: Radius.circular(20),
             ),
-            child: Image.asset(
-              store.image,
-              width: 135,
-              height: 120,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return Container(
-                  width: 135,
-                  height: 120,
-                  color: const Color(0xFFF5F5F5),
-                  child: const Icon(
-                    Icons.store,
-                    size: 40,
-                    color: Color(0xFFD9D9D9),
+            child: store.image != null
+                ? Image.network(
+                    store.image!,
+                    width: 135,
+                    height: 120,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        width: 135,
+                        height: 120,
+                        color: const Color(0xFFF5F5F5),
+                        child: const Icon(
+                          Icons.store,
+                          size: 40,
+                          color: Color(0xFFD9D9D9),
+                        ),
+                      );
+                    },
+                  )
+                : Container(
+                    width: 135,
+                    height: 120,
+                    color: const Color(0xFFF5F5F5),
+                    child: const Icon(
+                      Icons.store,
+                      size: 40,
+                      color: Color(0xFFD9D9D9),
+                    ),
                   ),
-                );
-              },
-            ),
           ),
           // Store Info
           Expanded(
@@ -93,7 +104,7 @@ class StoreCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${store.distance} Km',
+                        '${store.distance?.toStringAsFixed(1) ?? '-'} Km',
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w400,

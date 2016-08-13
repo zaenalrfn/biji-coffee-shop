@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../data/services/api_service.dart';
@@ -83,14 +84,15 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile(String name, String email) async {
+  Future<bool> updateProfile(String name, String email, File? imageFile) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
       // Call API to update profile
-      final updatedUser = await _apiService.updateProfile(name, email);
+      final updatedUser =
+          await _apiService.updateProfile(name, email, imageFile);
 
       // Update local user state
       _user = updatedUser;
