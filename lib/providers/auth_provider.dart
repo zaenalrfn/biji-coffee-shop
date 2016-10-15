@@ -96,8 +96,7 @@ class AuthProvider with ChangeNotifier {
       // Assuming response has 'access_token' similar to login
       if (response.containsKey('access_token')) {
         final token = response['access_token'];
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', token);
+        await AuthService().saveToken(token);
 
         // Try to get user data from response or fetch it
         try {

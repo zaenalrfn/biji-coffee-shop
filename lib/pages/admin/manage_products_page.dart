@@ -125,7 +125,7 @@ class _ManageProductsPageState extends State<ManageProductsPage> {
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   subtitle: Text(
-                    '\$${product.price} • ${product.categoryName ?? '-'}',
+                    'Rp ${product.price} • ${product.categoryName ?? '-'}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),

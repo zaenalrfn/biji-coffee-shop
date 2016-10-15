@@ -366,7 +366,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                               title: product.name,
                                               category: product.categoryName ??
                                                   'Unknown',
-                                              price: '\$${product.price}',
+                                              price: 'Rp ${product.price}',
                                               rating: '5.0',
                                               isNetworkImage: rawImage !=
                                                       null &&
