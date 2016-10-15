@@ -55,6 +55,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         setState(() {
           _currentUserId = user.id;
         });
+        print("🔑 Current User ID: $_currentUserId");
+        print("🔑 User Name: ${user.name}");
       }
     } catch (e) {
       print("Error getting user: $e");
@@ -65,6 +67,56 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     if (token == null) {
       // Handle unauthorized (e.g., logout)
       return;
+    }
+
+    // 2.5. Verify Order Access (DEBUGGING)
+    try {
+      final order = await _apiService.getOrderById(_orderId!);
+      print("📦 ===== ORDER VERIFICATION =====");
+      print("📦 Order ID: ${order.id}");
+      print("📦 Order User ID: ${order.user?.id}");
+      print("📦 Order Driver ID: ${order.driverId}");
+      if (order.driver != null) {
+        print("📦 Driver Name: ${order.driver!.name}");
+        print("📦 Driver User ID: ${order.driver!.userId}");
+      } else {
+        print("⚠️  Driver belum di-assign!");
+      }
+      print("📦 Order Status: ${order.status}");
+      print("📦 ================================");
+
+      // Validasi akses
+      if (order.user?.id != _currentUserId &&
+          (order.driver == null || order.driver!.userId != _currentUserId)) {
+        print("⛔ UNAUTHORIZED: User bukan customer dan bukan driver");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Anda tidak memiliki akses ke chat ini'),
+              backgroundColor: Colors.red,
+            ),
+          );
+          Navigator.pop(context);
+        }
+        return;
+      }
+
+      // Cek driver assignment
+      if (order.driverId == null) {
+        print("⚠️  Chat belum tersedia - driver belum assigned");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Chat belum tersedia. Driver sedang dicari.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          Navigator.pop(context);
+        }
+        return;
+      }
+    } catch (e) {
+      print("❌ Failed to verify order: $e");
     }
 
     // 3. Initialize Pusher
@@ -143,6 +195,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         print("✅ Message sent successfully: ${sentMsg.id}");
       } catch (e) {
         print("❌ Send failed: $e");
+
+        // Enhanced error logging
+        final errorStr = e.toString();
+        print("📥 Error String: $errorStr");
+        if (errorStr.contains('403')) {
+          print("⛔ 403 FORBIDDEN - Kemungkinan:");
+          print("   1. User ID tidak match dengan order.user_id");
+          print("   2. User ID tidak match dengan order.driver.user_id");
+          print("   3. Driver belum di-assign");
+        }
 
         // Revert optimistic update
         setState(() {
