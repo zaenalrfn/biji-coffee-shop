@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../products/products_page.dart'; // pastikan importnya benar
 
 class CategorySection extends StatelessWidget {
   const CategorySection({super.key});
@@ -27,37 +28,48 @@ class CategorySection extends StatelessWidget {
           children: categories
               .map(
                 (c) => Expanded(
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 6),
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4B3B47),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Column(
-                      children: [
-                        Icon(
-                          c["icon"] as IconData,
-                          color: Colors.white,
-                          size: 30,
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) =>
+                              ProductsPage(selectedCategory: c['title'] as String),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          c["title"] as String,
-                          style: const TextStyle(
+                      );
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 6),
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4B3B47),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            c["icon"] as IconData,
                             color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                            size: 30,
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          c["menu"] as String,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 13,
+                          const SizedBox(height: 8),
+                          Text(
+                            c["title"] as String,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            c["menu"] as String,
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
