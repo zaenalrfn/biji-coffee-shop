@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../../pages/onboarding/onboarding_page.dart';
 import '../../pages/welcome/welcome_page.dart';
-
-// Nanti kamu bisa tambahkan halaman lain di sini
 import '../../pages/auth/login_page.dart';
-// import '../../pages/auth/register_page.dart';
 import '../../pages/home/home_page.dart';
+import '../../pages/cart/cart_page.dart';
+import '../../pages/rewards/rewards_page.dart';
+import '../../pages/profile/profile_page.dart';
 
 class AppRoutes {
   // Daftar route name
@@ -14,6 +14,9 @@ class AppRoutes {
   static const String login = '/login';
   static const String register = '/register';
   static const String home = '/home';
+  static const String cart = '/cart';
+  static const String rewards = '/rewards';
+  static const String profile = '/profile';
 
   // Generator route
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -29,6 +32,12 @@ class AppRoutes {
       //   return MaterialPageRoute(builder: (_) => const RegisterPage());
       case home:
         return MaterialPageRoute(builder: (_) => const HomePage());
+      case cart:
+        return MaterialPageRoute(builder: (_) => const CartPage());
+      case rewards:
+        return MaterialPageRoute(builder: (_) => const RewardsPage());
+      case profile:
+        return MaterialPageRoute(builder: (_) => const ProfilePage());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(

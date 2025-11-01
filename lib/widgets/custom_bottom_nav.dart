@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/routes/app_routes.dart';
 
 class CustomBottomNav extends StatelessWidget {
   final int currentIndex;
@@ -40,7 +41,7 @@ class CustomBottomNav extends StatelessWidget {
           final bool isActive = index == currentIndex;
 
           return GestureDetector(
-            onTap: () => onTap(index),
+            onTap: () => _handleNavigation(context, index),
             behavior: HitTestBehavior.translucent,
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -67,5 +68,23 @@ class CustomBottomNav extends StatelessWidget {
         }),
       ),
     );
+  }
+
+  void _handleNavigation(BuildContext context, int index) {
+    switch (index) {
+      case 0:
+        // Home - tidak perlu navigasi karena sudah di home
+        break;
+      case 1:
+        Navigator.pushNamed(context, AppRoutes.cart);
+        break;
+      case 2:
+        Navigator.pushNamed(context, AppRoutes.rewards);
+        break;
+      case 3:
+        Navigator.pushNamed(context, AppRoutes.profile);
+        break;
+    }
+    onTap(index);
   }
 }
