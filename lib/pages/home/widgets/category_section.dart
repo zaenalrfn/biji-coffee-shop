@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../products/products_page.dart';
 
 class CategorySection extends StatelessWidget {
   const CategorySection({super.key});
@@ -26,79 +27,87 @@ class CategorySection extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          // Scroll horizontal
+          // Scroll horizontal + navigasi
           SizedBox(
-            height: 145, // <--- Diubah dari 130 menjadi 145
+            height: 145,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               itemCount: categories.length,
               itemBuilder: (context, index) {
                 final c = categories[index];
-                return Container(
-                  width: 150,
-                  margin: EdgeInsets.only(
-                    right: index == categories.length - 1 ? 0 : 14,
-                  ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4B3B47),
-                    borderRadius: BorderRadius.circular(18),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 6,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  // MENGGANTI CHILD DARI CONTAINER INI DENGAN STACK
-                  child: Stack(
-                    children: [
-                      // --- Icon Ornamen di Pojok Kanan Bawah ---
-                      Positioned(
-                        right:
-                            -10, // Dorong sedikit ke luar agar hanya pojoknya terlihat
-                        bottom: -10, // Dorong sedikit ke luar
-                        child: Icon(
-                          c["icon"] as IconData,
-                          size: 100, // Ukuran icon ornamen yang lebih besar
-                          color: Colors.white.withOpacity(
-                              0.1), // Transparan agar tidak terlalu menonjol
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ProductsPage(
+                          selectedCategory: c["title"] as String,
                         ),
                       ),
+                    );
+                  },
+                  child: Container(
+                    width: 150,
+                    margin: EdgeInsets.only(
+                      right: index == categories.length - 1 ? 0 : 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF4B3B47),
+                      borderRadius: BorderRadius.circular(18),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Stack(
+                      children: [
+                        // Ornamen icon besar transparan
+                        Positioned(
+                          right: -10,
+                          bottom: -10,
+                          child: Icon(
+                            c["icon"] as IconData,
+                            size: 100,
+                            color: Colors.white.withOpacity(0.1),
+                          ),
+                        ),
 
-                      // --- Konten Asli Card (Icon, Title, Menu) ---
-                      Padding(
-                        padding: const EdgeInsets.all(16), // Padding ini tetap
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start, // rata kiri
-                          children: [
-                            Icon(
-                              c["icon"] as IconData,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                            const SizedBox(height: 10),
-                            Text(
-                              c["title"] as String,
-                              style: const TextStyle(
+                        // Konten utama card
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Icon(
+                                c["icon"] as IconData,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
+                                size: 30,
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              c["menu"] as String,
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 13,
+                              const SizedBox(height: 10),
+                              Text(
+                                c["title"] as String,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 6),
+                              Text(
+                                c["menu"] as String,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },

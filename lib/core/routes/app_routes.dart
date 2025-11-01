@@ -6,6 +6,7 @@ import '../../pages/home/home_page.dart';
 import '../../pages/cart/cart_page.dart';
 import '../../pages/rewards/rewards_page.dart';
 import '../../pages/profile/profile_page.dart';
+import '../../pages/products/products_page.dart'; // tambahkan ini karena ada route /products
 
 class AppRoutes {
   // Daftar route name
@@ -17,6 +18,7 @@ class AppRoutes {
   static const String cart = '/cart';
   static const String rewards = '/rewards';
   static const String profile = '/profile';
+  static const String products = '/products'; // dari branch Zaenal
 
   // Generator route
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -38,6 +40,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const RewardsPage());
       case profile:
         return MaterialPageRoute(builder: (_) => const ProfilePage());
+      case products:
+        return MaterialPageRoute(builder: (_) => const ProductsPage());
       default:
         return MaterialPageRoute(
           builder: (_) => const Scaffold(
