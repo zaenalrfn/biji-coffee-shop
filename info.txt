@@ -1,0 +1,42 @@
+lib/
+├── core/
+│   ├── theme/
+│   │   ├── app_colors.dart        // definisi warna utama, sekunder, background, dsb.
+│   │   ├── app_text_styles.dart   // definisi gaya teks (judul, body, caption)
+│   │   └── app_theme.dart         // penggabungan tema MaterialApp
+│   ├── utils/
+│   │   └── constants.dart         // nilai konstan umum (padding, radius, dsb)
+│   └── routes/
+│       └── app_routes.dart        // nama rute dan fungsi navigasi
+
+├── widgets/
+│   ├── buttons/
+│   │   ├── primary_button.dart
+│   │   └── secondary_button.dart
+│   ├── inputs/
+│   │   └── text_field.dart
+│   ├── cards/
+│   │   └── product_card.dart
+│   └── common/
+│       ├── app_logo.dart
+│       ├── custom_app_bar.dart
+│       └── bottom_nav_bar.dart
+
+├── pages/
+│   ├── splash/
+│   │   └── splash_page.dart       // tampilan awal (logo/intro singkat)
+│   ├── onboarding/
+│   │   └── landing_page.dart      // mengarah ke login/register
+│   ├── auth/
+│   │   ├── login_page.dart
+│   │   └── register_page.dart
+│   ├── main/
+│   │   ├── home_page.dart
+│   │   ├── cart_page.dart
+│   │   ├── rewards_page.dart
+│   │   ├── profile_page.dart
+│   │   └── main_navigation.dart   // bottom navigation bar (4 tab)
+│   └── not_found/
+│       └── not_found_page.dart    // optional: untuk rute salah (opsional)
+
+└── main.dart                      // entry point, setup route + theme
