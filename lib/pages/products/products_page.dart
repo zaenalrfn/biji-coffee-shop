@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/products_data.dart';
+import '/pages/products/detail_product_page.dart';
 
 class ProductsPage extends StatefulWidget {
   final String? selectedCategory;
@@ -36,7 +37,7 @@ class _ProductsPageState extends State<ProductsPage> {
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(kToolbarHeight),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 15.0),
           child: AppBar(
             elevation: 0,
             backgroundColor: Colors.white,
@@ -66,13 +67,13 @@ class _ProductsPageState extends State<ProductsPage> {
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 40.0),
+          padding: const EdgeInsets.symmetric(horizontal: 30.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 16),
 
-              // 🔍 Search & Filter Row
+              // 🔍 Search & Filter
               Row(
                 children: [
                   Expanded(
@@ -144,7 +145,8 @@ class _ProductsPageState extends State<ProductsPage> {
                       final category = categories[index];
                       final isSelected = selectedCategory == category;
                       return GestureDetector(
-                        onTap: () => setState(() => selectedCategory = category),
+                        onTap: () =>
+                            setState(() => selectedCategory = category),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -154,7 +156,7 @@ class _ProductsPageState extends State<ProductsPage> {
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,
-                                fontSize: 15,
+                                fontSize: 20,
                                 color: isSelected
                                     ? Colors.black
                                     : const Color(0xFFBDBDBD),
@@ -180,7 +182,7 @@ class _ProductsPageState extends State<ProductsPage> {
               ),
               const SizedBox(height: 20),
 
-              // 🛍️ Product Grid with Animation ✨
+              // 🛍️ Product Grid (fix error ✅)
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 350),
                 switchInCurve: Curves.easeInOut,
@@ -195,15 +197,17 @@ class _ProductsPageState extends State<ProductsPage> {
                   );
                 },
                 child: GridView.builder(
-                  key: ValueKey(selectedCategory), // penting agar animasi berubah
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
+                  key: ValueKey(selectedCategory),
+                  shrinkWrap: true, // ✅ penting!
+                  physics:
+                      const NeverScrollableScrollPhysics(), // ✅ biar SingleChildScrollView yang handle scroll
                   padding: const EdgeInsets.only(bottom: 16),
                   itemCount: filteredProducts.length,
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 30,
-                    childAspectRatio: 0.75,
+                    mainAxisSpacing: 20,
+                    childAspectRatio: 0.55,
                   ),
                   itemBuilder: (context, index) {
                     final product = filteredProducts[index];
@@ -219,100 +223,140 @@ class _ProductsPageState extends State<ProductsPage> {
   }
 
   Widget _buildProductCard(Map<String, dynamic> product) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Stack(
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.network(
-                product['image'],
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    height: 140,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(20),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          PageRouteBuilder(
+            transitionDuration: const Duration(milliseconds: 300),
+            reverseTransitionDuration: const Duration(milliseconds: 300),
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+              final curvedAnimation =
+                  CurvedAnimation(parent: animation, curve: Curves.easeInOut);
+              return FadeTransition(
+                opacity: curvedAnimation,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0, 0.05),
+                    end: Offset.zero,
+                  ).animate(curvedAnimation),
+                  child: child,
+                ),
+              );
+            },
+            pageBuilder: (_, __, ___) => ProductDetailPage(product: product),
+          ),
+        );
+      },
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Flexible(
+                child: Stack(
+                  children: [
+                    Hero(
+                      // 🔥 tag dibuat unik berdasarkan nama dan harga (atau index nanti)
+                      tag: 'product-${product['title']}-${product['price']}',
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Image.asset(
+                            product['image'],
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 140,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[200],
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: const Icon(Icons.image,
+                                    size: 40, color: Colors.grey),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
                     ),
-                    child: const Icon(Icons.image, size: 40, color: Colors.grey),
-                  );
-                },
-              ),
-            ),
-            Positioned(
-              right: 0,
-              bottom: 0,
-              child: Container(
-                width: 45,
-                height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(14),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 6,
-                      offset: const Offset(0, 3),
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.shopping_bag_outlined,
+                          size: 18,
+                          color: Colors.black,
+                        ),
+                      ),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.shopping_bag_outlined,
-                  size: 18,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                product['title'],
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
                   color: Colors.black,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                softWrap: true,
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          product['title'],
-          style: const TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
-            color: Colors.black,
-            height: 1.2,
-          ),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 3),
-        Text(
-          product['subtitle'],
-          style: const TextStyle(
-            color: Color(0xFF9E9E9E),
-            fontSize: 12,
-            fontWeight: FontWeight.w400,
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            const Icon(
-              Icons.local_offer_outlined,
-              size: 14,
-              color: Color(0xFF757575),
-            ),
-            const SizedBox(width: 4),
-            Text(
-              '\$${product['price']}',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 15,
-                color: Colors.black,
+              const SizedBox(height: 3),
+              Text(
+                product['subtitle'],
+                style: const TextStyle(
+                  color: Color(0xFF9E9E9E),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w400,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
-        ),
-      ],
+              const SizedBox(height: 4),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.local_offer_outlined,
+                    size: 14,
+                    color: Color(0xFF757575),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    '\$${product['price']}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15,
+                      color: Colors.black,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          );
+        },
+      ),
     );
   }
 }
