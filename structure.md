@@ -10,6 +10,7 @@ biji_coffee
 │   │       │   └── LOG.old
 │   │       ├── blob_storage
 │   │       │   ├── 0333ba71-555f-40b9-8391-a71c4b9b00e3
+│   │       │   ├── 771863f6-f39d-40c1-863f-89941505579a
 │   │       │   ├── a184ff29-ac4c-4dfc-988f-32d104f19983
 │   │       │   └── fd90da9d-1577-496a-8a08-eb3edb8f90ee
 │   │       ├── BudgetDatabase
@@ -147,6 +148,7 @@ biji_coffee
 │   │       │       ├── ba23d8ecda68de77_0
 │   │       │       ├── f1cdccba37924bda_0
 │   │       │       ├── f1cdccba37924bda_1
+│   │       │       ├── fa813c9ad67834ac_0
 │   │       │       └── index
 │   │       ├── Session Storage
 │   │       │   ├── 000003.log
@@ -159,9 +161,11 @@ biji_coffee
 │   │       │   ├── Session_13406456568472665
 │   │       │   ├── Session_13406458691466312
 │   │       │   ├── Session_13406460221980767
+│   │       │   ├── Session_13406473434348776
 │   │       │   ├── Tabs_13406458642183369
 │   │       │   ├── Tabs_13406458691591786
-│   │       │   └── Tabs_13406460222181687
+│   │       │   ├── Tabs_13406460222181687
+│   │       │   └── Tabs_13406473434528623
 │   │       ├── Shared Dictionary
 │   │       │   ├── cache
 │   │       │   │   ├── index-dir
@@ -382,6 +386,8 @@ biji_coffee
 │   │       ├── app_colors.dart
 │   │       ├── app_text_styles.dart
 │   │       └── app_theme.dart
+│   ├── data
+│   │   └── products_data.dart
 │   ├── pages
 │   │   ├── auth
 │   │   │   └── login_page.dart
@@ -395,6 +401,8 @@ biji_coffee
 │   │   │   └── home_page.dart
 │   │   ├── onboarding
 │   │   │   └── onboarding_page.dart
+│   │   ├── products
+│   │   │   └── products_page.dart
 │   │   ├── profile
 │   │   │   └── profile_page.dart
 │   │   ├── rewards

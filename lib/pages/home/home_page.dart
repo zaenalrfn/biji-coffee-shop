@@ -3,6 +3,7 @@ import '../../widgets/custom_bottom_nav.dart';
 import 'widgets/header_section.dart';
 import 'widgets/promotion_section.dart';
 import 'widgets/category_section.dart';
+import 'widgets/featured_beverages_section.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -37,6 +38,8 @@ class _HomePageState extends State<HomePage> {
               PromotionSection(),
               SizedBox(height: 25),
               CategorySection(),
+              SizedBox(height: 25),
+              FeaturedBeveragesSection(), // tambahkan di sini
             ],
           ),
         ),

@@ -34,24 +34,14 @@ class PromotionSection extends StatelessWidget {
 
           // Scroll horizontal cards
           SizedBox(
-            height: 190,
+            height: 190, // Ukuran card tetap sama
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
-                _promoCard(
-                  "assets/images/pic1.png",
-                  "Hot Mocha Cappuccino Latte",
-                  "\$5.8",
-                  "\$9.9",
-                  const Color(0xFF4B3B47),
-                ),
-                _promoCard(
-                  "assets/images/pic1.png",
-                  "Hot Sweet Tea Indonesia",
-                  "\$2.5",
-                  "\$3.5",
-                  const Color(0xFFE74C3C),
-                ),
+                // --- DIUBAH MENJADI 3 KARTU ---
+                _promoCard(),
+                _promoCard(),
+                _promoCard(),
               ],
             ),
           ),
@@ -60,24 +50,20 @@ class PromotionSection extends StatelessWidget {
     );
   }
 
-  Widget _promoCard(
-    String productImage,
-    String title,
-    String price,
-    String oldPrice,
-    Color bgColor,
-  ) {
+  // Fungsi _promoCard (Tetap sama)
+  Widget _promoCard() {
     return Container(
-      width: 275,
-      margin: const EdgeInsets.only(right: 16),
+      width: 325, // Ukuran card tetap sama
+      margin: const EdgeInsets.only(right: 16), // Margin tetap sama
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(18), // Radius tetap sama
         image: const DecorationImage(
-          image: AssetImage("assets/images/card-bg.png"),
-          fit: BoxFit.cover,
+          // Menggunakan gambar promosi baru Anda
+          image: AssetImage("assets/images/promosi.png"),
+          fit: BoxFit.cover, // Memastikan gambar memenuhi seluruh card
         ),
         boxShadow: [
+          // Shadow tetap sama
           BoxShadow(
             color: Colors.black.withOpacity(0.12),
             blurRadius: 8,
@@ -85,73 +71,7 @@ class PromotionSection extends StatelessWidget {
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          // Gambar produk kanan — diperbesar
-          Positioned(
-            right: 8,
-            top: 25,
-            bottom: 25,
-            child: Image.asset(
-              productImage,
-              width: 115, // dibesarkan dari 100 -> 115
-              fit: BoxFit.contain,
-            ),
-          ),
-
-          // Isi teks dan harga
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 28), // lebih turun lagi
-                SizedBox(
-                  width: 150,
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      height: 1.3,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12), // harga lebih naik lagi
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        price,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Text(
-                          oldPrice,
-                          style: const TextStyle(
-                            color: Colors.white70,
-                            fontSize: 15,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      // Tidak ada child (Stack, Teks, Harga dihapus)
     );
   }
 }
