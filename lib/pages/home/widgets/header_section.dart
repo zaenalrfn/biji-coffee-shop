@@ -34,6 +34,7 @@ class HeaderSection extends StatelessWidget {
 
           // Bagian kanan (foto profil + indikator)
           Stack(
+            clipBehavior: Clip.none, // <-- 1. TAMBAHKAN INI
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
@@ -45,14 +46,19 @@ class HeaderSection extends StatelessWidget {
                 ),
               ),
               Positioned(
-                top: 4,
-                right: 4,
+                top: -5, // <-- 2. UBAH INI (dari 4 menjadi -5)
+                right: -5, // <-- 3. UBAH INI (dari 4 menjadi -5)
                 child: Container(
-                  width: 10,
-                  height: 10,
-                  decoration: const BoxDecoration(
+                  width: 15,
+                  height: 15,
+                  decoration: BoxDecoration(
+                    // <-- 4. TAMBAHKAN BORDER
                     color: Colors.orange,
                     shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.white, // Border putih
+                      width: 1.5, // Ketebalan border
+                    ),
                   ),
                 ),
               ),
