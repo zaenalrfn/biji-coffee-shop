@@ -1,3 +1,4 @@
+import 'package:biji_coffee/pages/cart/cart_page.dart';
 import 'package:flutter/material.dart';
 import '../../data/products_data.dart';
 import '/pages/products/detail_product_page.dart';
@@ -287,24 +288,53 @@ class _ProductsPageState extends State<ProductsPage> {
                     Positioned(
                       right: 0,
                       bottom: 0,
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(14),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 6,
-                              offset: const Offset(0, 3),
+                      child: GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            PageRouteBuilder(
+                              transitionDuration:
+                                  const Duration(milliseconds: 300),
+                              reverseTransitionDuration:
+                                  const Duration(milliseconds: 300),
+                              transitionsBuilder: (context, animation,
+                                  secondaryAnimation, child) {
+                                final curvedAnimation = CurvedAnimation(
+                                    parent: animation, curve: Curves.easeInOut);
+                                return FadeTransition(
+                                  opacity: curvedAnimation,
+                                  child: SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(0, 0.05),
+                                      end: Offset.zero,
+                                    ).animate(curvedAnimation),
+                                    child: child,
+                                  ),
+                                );
+                              },
+                              pageBuilder: (_, __, ___) => const CartPage(),
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.shopping_bag_outlined,
-                          size: 18,
-                          color: Colors.black,
+                          );
+                        },
+                        child: Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(14),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 6,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: const Icon(
+                            Icons.shopping_bag_outlined,
+                            size: 18,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
