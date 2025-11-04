@@ -20,8 +20,12 @@ import '../../pages/notification/notification_page.dart';
 import '../../pages/messages/message_list_page.dart';
 import '../../pages/messages/chat_detail_page.dart';
 
+
 // Halaman pelacakan pesanan
 import '../../pages/tracker/delivery_tracker_page.dart';
+
+// Halaman lokasi toko
+import '../../pages/store_location/store_location_page.dart';
 
 // =========================================================
 
@@ -48,6 +52,10 @@ class AppRoutes {
 
   // Pelacakan
   static const String deliveryTracker = '/tracker';
+
+  // Lokasi Toko
+  static const String storeLocation = '/store-location';
+  
 
   // ==========================================================
 
@@ -99,6 +107,10 @@ class AppRoutes {
       // ===== Pelacakan =====
       case deliveryTracker:
         return MaterialPageRoute(builder: (_) => const DeliveryTrackerPage());
+
+      // ===== Lokasi Toko =====
+      case storeLocation:
+        return MaterialPageRoute(builder: (_) => const StoreLocationPage());
 
       // ===== Default (404 Page) =====
       default:

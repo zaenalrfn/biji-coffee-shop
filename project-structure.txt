@@ -1,0 +1,272 @@
+├── android/
+│   ├── app/
+│   │   ├── src/
+│   │   │   ├── debug/
+│   │   │   │   └── AndroidManifest.xml (0.4 KB)
+│   │   │   ├── main/
+│   │   │   │   ├── java/
+│   │   │   │   │   └── io/
+│   │   │   │   │       └── flutter/
+│   │   │   │   │           └── plugins/
+│   │   │   │   │               └── GeneratedPluginRegistrant.java (0.8 KB)
+│   │   │   │   ├── kotlin/
+│   │   │   │   │   └── com/
+│   │   │   │   │       └── example/
+│   │   │   │   │           └── biji_coffee/
+│   │   │   │   │               └── MainActivity.kt (0.1 KB)
+│   │   │   │   ├── res/
+│   │   │   │   │   ├── drawable/
+│   │   │   │   │   │   └── launch_background.xml (0.4 KB)
+│   │   │   │   │   ├── drawable-v21/
+│   │   │   │   │   │   └── launch_background.xml (0.4 KB)
+│   │   │   │   │   ├── mipmap-hdpi/
+│   │   │   │   │   │   └── ic_launcher.png (0.5 KB)
+│   │   │   │   │   ├── mipmap-mdpi/
+│   │   │   │   │   │   └── ic_launcher.png (0.4 KB)
+│   │   │   │   │   ├── mipmap-xhdpi/
+│   │   │   │   │   │   └── ic_launcher.png (0.7 KB)
+│   │   │   │   │   ├── mipmap-xxhdpi/
+│   │   │   │   │   │   └── ic_launcher.png (1.0 KB)
+│   │   │   │   │   ├── mipmap-xxxhdpi/
+│   │   │   │   │   │   └── ic_launcher.png (1.4 KB)
+│   │   │   │   │   ├── values/
+│   │   │   │   │   │   └── styles.xml (1.0 KB)
+│   │   │   │   │   └── values-night/
+│   │   │   │   │       └── styles.xml (1.0 KB)
+│   │   │   │   └── AndroidManifest.xml (2.2 KB)
+│   │   │   └── profile/
+│   │   │       └── AndroidManifest.xml (0.4 KB)
+│   │   └── build.gradle (1.4 KB)
+│   ├── gradle/
+│   │   └── wrapper/
+│   │       └── gradle-wrapper.properties (0.2 KB)
+│   ├── build.gradle (0.3 KB)
+│   ├── gradle.properties (0.1 KB)
+│   ├── local.properties (0.0 KB)
+│   └── settings.gradle (0.7 KB)
+├── assets/
+│   └── images/
+│       ├── bean.svg (2.4 KB)
+│       ├── bg1.jpg (24.5 KB)
+│       ├── card-bg.png (2.7 KB)
+│       ├── drink1.jpg (31.8 KB)
+│       ├── gift.svg (17.1 KB)
+│       ├── line.png (10.3 KB)
+│       ├── pic1.png (14.5 KB)
+│       ├── product1.jpg (21.4 KB)
+│       ├── product2.jpg (22.5 KB)
+│       ├── product3.jpg (24.5 KB)
+│       ├── product4.jpg (20.3 KB)
+│       ├── profile1.jpg (9.1 KB)
+│       ├── promosi.png (45.2 KB)
+│       ├── rank.png (4.3 KB)
+│       └── welcome.png (182.6 KB)
+├── ios/
+│   ├── Flutter/
+│   │   ├── ephemeral/
+│   │   │   ├── flutter_lldb_helper.py (1.2 KB)
+│   │   │   └── flutter_lldbinit (0.1 KB)
+│   │   ├── AppFrameworkInfo.plist (0.8 KB)
+│   │   ├── Debug.xcconfig (0.0 KB)
+│   │   ├── flutter_export_environment.sh (0.5 KB)
+│   │   ├── Generated.xcconfig (0.5 KB)
+│   │   └── Release.xcconfig (0.0 KB)
+│   ├── Runner/
+│   │   ├── Assets.xcassets/
+│   │   │   ├── AppIcon.appiconset/
+│   │   │   │   ├── Contents.json (2.6 KB)
+│   │   │   │   ├── Icon-App-1024x1024@1x.png (10.7 KB)
+│   │   │   │   ├── Icon-App-20x20@1x.png (0.3 KB)
+│   │   │   │   ├── Icon-App-20x20@2x.png (0.4 KB)
+│   │   │   │   ├── Icon-App-20x20@3x.png (0.4 KB)
+│   │   │   │   ├── Icon-App-29x29@1x.png (0.3 KB)
+│   │   │   │   ├── Icon-App-29x29@2x.png (0.5 KB)
+│   │   │   │   ├── Icon-App-29x29@3x.png (0.7 KB)
+│   │   │   │   ├── Icon-App-40x40@1x.png (0.4 KB)
+│   │   │   │   ├── Icon-App-40x40@2x.png (0.6 KB)
+│   │   │   │   ├── Icon-App-40x40@3x.png (0.8 KB)
+│   │   │   │   ├── Icon-App-60x60@2x.png (0.8 KB)
+│   │   │   │   ├── Icon-App-60x60@3x.png (1.6 KB)
+│   │   │   │   ├── Icon-App-76x76@1x.png (0.7 KB)
+│   │   │   │   ├── Icon-App-76x76@2x.png (1.2 KB)
+│   │   │   │   └── Icon-App-83.5x83.5@2x.png (1.4 KB)
+│   │   │   └── LaunchImage.imageset/
+│   │   │       ├── Contents.json (0.4 KB)
+│   │   │       ├── LaunchImage.png (0.1 KB)
+│   │   │       ├── LaunchImage@2x.png (0.1 KB)
+│   │   │       ├── LaunchImage@3x.png (0.1 KB)
+│   │   │       └── README.md (0.3 KB)
+│   │   ├── Base.lproj/
+│   │   │   ├── LaunchScreen.storyboard (2.4 KB)
+│   │   │   └── Main.storyboard (1.6 KB)
+│   │   ├── AppDelegate.swift (0.4 KB)
+│   │   ├── GeneratedPluginRegistrant.h (0.4 KB)
+│   │   ├── GeneratedPluginRegistrant.m (0.5 KB)
+│   │   ├── Info.plist (1.7 KB)
+│   │   └── Runner-Bridging-Header.h (0.0 KB)
+│   ├── Runner.xcodeproj/
+│   │   ├── project.xcworkspace/
+│   │   │   ├── xcshareddata/
+│   │   │   │   ├── IDEWorkspaceChecks.plist (0.2 KB)
+│   │   │   │   └── WorkspaceSettings.xcsettings (0.2 KB)
+│   │   │   └── contents.xcworkspacedata (0.1 KB)
+│   │   ├── xcshareddata/
+│   │   │   └── xcschemes/
+│   │   │       └── Runner.xcscheme (3.7 KB)
+│   │   └── project.pbxproj (23.7 KB)
+│   ├── Runner.xcworkspace/
+│   │   ├── xcshareddata/
+│   │   │   ├── IDEWorkspaceChecks.plist (0.2 KB)
+│   │   │   └── WorkspaceSettings.xcsettings (0.2 KB)
+│   │   └── contents.xcworkspacedata (0.2 KB)
+│   ├── RunnerTests/
+│   │   └── RunnerTests.swift (0.3 KB)
+├── lib/
+│   ├── core/
+│   │   ├── routes/
+│   │   │   └── app_routes.dart (4.0 KB)
+│   │   └── theme/
+│   │       ├── app_colors.dart (0.2 KB)
+│   │       ├── app_text_styles.dart (0.3 KB)
+│   │       └── app_theme.dart (0.3 KB)
+│   ├── data/
+│   │   ├── cart_data.dart (1.2 KB)
+│   │   ├── message_data.dart (3.6 KB)
+│   │   └── products_data.dart (1.7 KB)
+│   ├── pages/
+│   │   ├── auth/
+│   │   │   ├── login_page.dart (9.4 KB)
+│   │   │   └── register_page.dart (8.5 KB)
+│   │   ├── cart/
+│   │   │   └── cart_page.dart (11.6 KB)
+│   │   ├── checkout/
+│   │   │   ├── checkout_coupon_apply_page.dart (3.1 KB)
+│   │   │   ├── checkout_payment_method_page.dart (11.4 KB)
+│   │   │   ├── checkout_shipping_address_page.dart (4.4 KB)
+│   │   │   └── checkout_stepper.dart (4.7 KB)
+│   │   ├── home/
+│   │   │   ├── widgets/
+│   │   │   │   ├── category_section.dart (4.4 KB)
+│   │   │   │   ├── featured_beverages_section.dart (8.2 KB)
+│   │   │   │   ├── header_section.dart (2.3 KB)
+│   │   │   │   └── promotion_section.dart (2.2 KB)
+│   │   │   └── home_page.dart (1.4 KB)
+│   │   ├── messages/
+│   │   │   ├── chat_detail_page.dart (10.0 KB)
+│   │   │   └── message_list_page.dart (6.6 KB)
+│   │   ├── notification/
+│   │   │   └── notification_page.dart (7.7 KB)
+│   │   ├── onboarding/
+│   │   │   └── onboarding_page.dart (7.1 KB)
+│   │   ├── products/
+│   │   │   ├── detail_product_page.dart (12.7 KB)
+│   │   │   └── products_page.dart (15.2 KB)
+│   │   ├── profile/
+│   │   │   └── profile_page.dart (12.6 KB)
+│   │   ├── rewards/
+│   │   │   └── rewards_page.dart (12.2 KB)
+│   │   ├── store_location/
+│   │   │   └── store_location.dart (0.0 KB)
+│   │   ├── tracker/
+│   │   │   └── delivery_tracker_page.dart (22.0 KB)
+│   │   ├── welcome/
+│   │   │   └── welcome_page.dart (5.0 KB)
+│   │   └── wishlist/
+│   │       └── wistlist.dart (5.6 KB)
+│   ├── widgets/
+│   │   ├── custom_bottom_nav.dart (2.5 KB)
+│   │   └── custom_side_nav.dart (6.2 KB)
+│   └── main.dart (1.3 KB)
+├── linux/
+│   ├── flutter/
+│   │   ├── CMakeLists.txt (2.8 KB)
+│   │   ├── generated_plugin_registrant.cc (0.2 KB)
+│   │   ├── generated_plugin_registrant.h (0.3 KB)
+│   │   └── generated_plugins.cmake (0.7 KB)
+│   ├── CMakeLists.txt (5.4 KB)
+│   ├── main.cc (0.2 KB)
+│   ├── my_application.cc (4.4 KB)
+│   └── my_application.h (0.4 KB)
+├── macos/
+│   ├── Flutter/
+│   │   ├── ephemeral/
+│   │   │   ├── flutter_export_environment.sh (0.5 KB)
+│   │   │   └── Flutter-Generated.xcconfig (0.4 KB)
+│   │   ├── Flutter-Debug.xcconfig (0.0 KB)
+│   │   ├── Flutter-Release.xcconfig (0.0 KB)
+│   │   └── GeneratedPluginRegistrant.swift (0.3 KB)
+│   ├── Runner/
+│   │   ├── Assets.xcassets/
+│   │   │   └── AppIcon.appiconset/
+│   │   │       ├── app_icon_1024.png (100.6 KB)
+│   │   │       ├── app_icon_128.png (5.5 KB)
+│   │   │       ├── app_icon_16.png (0.5 KB)
+│   │   │       ├── app_icon_256.png (13.8 KB)
+│   │   │       ├── app_icon_32.png (1.0 KB)
+│   │   │       ├── app_icon_512.png (35.6 KB)
+│   │   │       ├── app_icon_64.png (2.2 KB)
+│   │   │       └── Contents.json (1.3 KB)
+│   │   ├── Base.lproj/
+│   │   │   └── MainMenu.xib (23.5 KB)
+│   │   ├── Configs/
+│   │   │   ├── AppInfo.xcconfig (0.6 KB)
+│   │   │   ├── Debug.xcconfig (0.1 KB)
+│   │   │   ├── Release.xcconfig (0.1 KB)
+│   │   │   └── Warnings.xcconfig (0.6 KB)
+│   │   ├── AppDelegate.swift (0.2 KB)
+│   │   ├── DebugProfile.entitlements (0.4 KB)
+│   │   ├── Info.plist (1.1 KB)
+│   │   ├── MainFlutterWindow.swift (0.4 KB)
+│   │   └── Release.entitlements (0.2 KB)
+│   ├── Runner.xcodeproj/
+│   │   ├── project.xcworkspace/
+│   │   │   └── xcshareddata/
+│   │   │       └── IDEWorkspaceChecks.plist (0.2 KB)
+│   │   ├── xcshareddata/
+│   │   │   └── xcschemes/
+│   │   │       └── Runner.xcscheme (3.7 KB)
+│   │   └── project.pbxproj (26.5 KB)
+│   ├── Runner.xcworkspace/
+│   │   ├── xcshareddata/
+│   │   │   └── IDEWorkspaceChecks.plist (0.2 KB)
+│   │   └── contents.xcworkspacedata (0.2 KB)
+│   ├── RunnerTests/
+│   │   └── RunnerTests.swift (0.3 KB)
+├── test/
+│   └── widget_test.dart (1.1 KB)
+├── web/
+│   ├── icons/
+│   │   ├── Icon-192.png (5.2 KB)
+│   │   ├── Icon-512.png (8.1 KB)
+│   │   ├── Icon-maskable-192.png (5.5 KB)
+│   │   └── Icon-maskable-512.png (20.5 KB)
+│   ├── favicon.png (0.9 KB)
+│   ├── index.html (1.2 KB)
+│   └── manifest.json (0.9 KB)
+├── windows/
+│   ├── flutter/
+│   │   ├── ephemeral/
+│   │   ├── CMakeLists.txt (3.8 KB)
+│   │   ├── generated_plugin_registrant.cc (0.2 KB)
+│   │   ├── generated_plugin_registrant.h (0.3 KB)
+│   │   └── generated_plugins.cmake (0.7 KB)
+│   ├── runner/
+│   │   ├── resources/
+│   │   │   └── app_icon.ico (33.0 KB)
+│   │   ├── CMakeLists.txt (1.8 KB)
+│   │   ├── flutter_window.cpp (2.1 KB)
+│   │   ├── flutter_window.h (0.9 KB)
+│   │   ├── main.cpp (1.3 KB)
+│   │   ├── resource.h (0.4 KB)
+│   │   ├── runner.exe.manifest (0.6 KB)
+│   │   ├── Runner.rc (3.1 KB)
+│   │   ├── utils.cpp (1.8 KB)
+│   │   ├── utils.h (0.7 KB)
+│   │   ├── win32_window.cpp (8.6 KB)
+│   │   └── win32_window.h (3.5 KB)
+│   └── CMakeLists.txt (4.2 KB)
+├── analysis_options.yaml (1.4 KB)
+├── info.txt (1.7 KB)
+├── pubspec.lock (15.4 KB)
+├── pubspec.yaml (4.1 KB)
+└── README.md (0.6 KB)

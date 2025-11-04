@@ -79,11 +79,11 @@ class CustomSideNav extends StatelessWidget {
                     route: AppRoutes.notifications,
                   ),
                   _buildMenuItem(
-                    context,
-                    icon: Icons.store_outlined,
-                    title: 'Store Locations',
-                    route: AppRoutes.products,
-                  ),
+  context,
+  icon: Icons.store_outlined,
+  title: 'Store Locations',
+  route: AppRoutes.storeLocation,  // ✅ BENAR
+),
                   _buildMenuItem(
                     context,
                     icon: Icons.delivery_dining_outlined,
