@@ -22,7 +22,7 @@ import '../../pages/messages/chat_detail_page.dart';
 
 // Halaman pelacakan pesanan
 import '../../pages/tracker/delivery_tracker_page.dart';
-
+import '../../pages/order_review/order_review.dart';
 // =========================================================
 
 class AppRoutes {
@@ -48,7 +48,7 @@ class AppRoutes {
 
   // Pelacakan
   static const String deliveryTracker = '/tracker';
-
+  static const String orderReview = '/order-review';
   // ==========================================================
 
   // =================== GENERATE ROUTE =======================
@@ -99,7 +99,8 @@ class AppRoutes {
       // ===== Pelacakan =====
       case deliveryTracker:
         return MaterialPageRoute(builder: (_) => const DeliveryTrackerPage());
-
+      case orderReview:
+        return MaterialPageRoute(builder: (_) => const OrderReviewPage());
       // ===== Default (404 Page) =====
       default:
         return MaterialPageRoute(

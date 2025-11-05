@@ -106,7 +106,7 @@ class CustomSideNav extends StatelessWidget {
                     context,
                     icon: Icons.reviews_outlined,
                     title: 'Order Review',
-                    route: AppRoutes.products,
+                    route: AppRoutes.orderReview, // ✅ Ganti ini
                   ),
                   _buildMenuItem(
                     context,
