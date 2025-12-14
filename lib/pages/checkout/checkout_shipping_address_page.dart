@@ -1,7 +1,9 @@
-// lib/pages/checkout/checkout_shipping_address_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/order_provider.dart';
+import '../../core/routes/app_routes.dart';
 import 'checkout_stepper.dart';
-import 'checkout_coupon_apply_page.dart';
 
 class CheckoutShippingAddressPage extends StatefulWidget {
   const CheckoutShippingAddressPage({Key? key}) : super(key: key);
@@ -13,13 +15,26 @@ class CheckoutShippingAddressPage extends StatefulWidget {
 
 class _CheckoutShippingAddressPageState
     extends State<CheckoutShippingAddressPage> {
-  final TextEditingController nameCtrl =
-      TextEditingController(text: 'Samuel Witwicky');
+  final TextEditingController nameCtrl = TextEditingController();
   final TextEditingController zipCtrl = TextEditingController();
   final TextEditingController countryCtrl = TextEditingController();
   final TextEditingController stateCtrl = TextEditingController();
   final TextEditingController cityCtrl = TextEditingController();
+  final TextEditingController addressCtrl =
+      TextEditingController(); // Added address field
+
   bool saveAddress = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = Provider.of<AuthProvider>(context, listen: false).user;
+      if (user != null) {
+        nameCtrl.text = user.name;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -28,13 +43,26 @@ class _CheckoutShippingAddressPageState
     countryCtrl.dispose();
     stateCtrl.dispose();
     cityCtrl.dispose();
+    addressCtrl.dispose();
     super.dispose();
   }
 
   void _onNext() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CheckoutCouponApplyPage()),
-    );
+    // Save address to provider
+    final addressData = {
+      'recipient_name': nameCtrl.text,
+      'address_line': addressCtrl.text, // Added this field in UI
+      'city': cityCtrl.text,
+      'state': stateCtrl.text,
+      'country': countryCtrl.text,
+      'zip_code': zipCtrl.text,
+    };
+
+    Provider.of<OrderProvider>(context, listen: false)
+        .setShippingAddress(addressData);
+
+    // Navigate to Payment (Step 1)
+    Navigator.pushNamed(context, AppRoutes.checkoutPayment);
   }
 
   Widget _roundedNextButton() {
@@ -133,10 +161,13 @@ class _CheckoutShippingAddressPageState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _labelledField('Card Holder Name', nameCtrl),
+                    _labelledField('Recipient Name', nameCtrl),
+                    _labelledField('Address', addressCtrl,
+                        hint: 'Street address'),
                     _labelledField('Zip/postal Code', zipCtrl),
                     _labelledField('Country', countryCtrl,
-                        hint: 'Choose your country', isDropdown: true),
+                        hint: 'Choose your country',
+                        isDropdown: false), // Simplified to text for now
                     _labelledField('State', stateCtrl, hint: 'Enter here'),
                     _labelledField('City', cityCtrl, hint: 'Enter here'),
 

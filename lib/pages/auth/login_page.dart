@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/constants/api_constants.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,7 +12,6 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
   bool _obscureText = true;
 
   Future<void> _login() async {
@@ -25,52 +22,22 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.loginEndpoint),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _emailController.text,
-          'password': _passwordController.text,
-        }),
-      );
+    final success = await authProvider.login(
+      _emailController.text,
+      _passwordController.text,
+    );
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        // Success
-        final token = data['access_token'];
-        if (token != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('access_token', token);
-
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        }
-      } else {
-        // Error
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'] ?? 'Login failed')),
-          );
-        }
+    if (success) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
       }
-    } catch (e) {
+    } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(content: Text(authProvider.errorMessage ?? 'Login failed')),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -193,34 +160,36 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       const SizedBox(height: 28),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 54,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                      Consumer<AuthProvider>(builder: (context, auth, _) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                          ),
-                          onPressed: _isLoading ? null : _login,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2),
-                                )
-                              : const Text(
-                                  "LOGIN",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.8,
+                            onPressed: auth.isLoading ? null : _login,
+                            child: auth.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text(
+                                    "LOGIN",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.8,
+                                    ),
                                   ),
-                                ),
-                        ),
-                      ),
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,

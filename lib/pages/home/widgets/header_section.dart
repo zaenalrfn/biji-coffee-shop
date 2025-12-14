@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '/core/routes/app_routes.dart'; // ✅ disesuaikan dengan path kamu
 
+import 'package:provider/provider.dart';
+import '../../../../providers/auth_provider.dart';
+
 class HeaderSection extends StatelessWidget {
   const HeaderSection({super.key});
 
@@ -12,24 +15,26 @@ class HeaderSection extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // Bagian kiri (teks sapaan)
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 "Good Morning",
                 style: TextStyle(
                   color: Colors.black54,
                   fontSize: 14,
                 ),
               ),
-              SizedBox(height: 6),
-              Text(
-                "Kevin Hard",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
+              const SizedBox(height: 6),
+              Consumer<AuthProvider>(builder: (context, auth, _) {
+                return Text(
+                  auth.user?.name ?? "Guest",
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                );
+              }),
             ],
           ),
 

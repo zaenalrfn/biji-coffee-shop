@@ -3,6 +3,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'core/theme/app_theme.dart';
 import 'core/routes/app_routes.dart';
 
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'providers/product_provider.dart';
+import 'providers/cart_provider.dart';
+import 'providers/order_provider.dart';
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
@@ -11,10 +17,18 @@ void main() async {
   final String? token = prefs.getString('access_token');
   final String initialRoute = token != null ? AppRoutes.home : AppRoutes.login;
 
-  // Optional: Logic untuk onboarding bisa ditambahkan di sini jika dibutuhkan
-  // final lastRoute = prefs.getString('last_route') ?? AppRoutes.onboarding;
-
-  runApp(CoffeeShopApp(initialRoute: initialRoute));
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+            create: (_) => AuthProvider()..checkLoginStatus()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
+        ChangeNotifierProvider(create: (_) => CartProvider()),
+        ChangeNotifierProvider(create: (_) => OrderProvider()),
+      ],
+      child: CoffeeShopApp(initialRoute: initialRoute),
+    ),
+  );
 }
 
 class CoffeeShopApp extends StatelessWidget {

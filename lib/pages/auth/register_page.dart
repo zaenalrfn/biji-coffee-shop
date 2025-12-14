@@ -1,8 +1,6 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/constants/api_constants.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -15,7 +13,6 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
   bool _obscureText = true;
 
   Future<void> _register() async {
@@ -28,56 +25,25 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
-    try {
-      final response = await http.post(
-        Uri.parse(ApiConstants.registerEndpoint),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'name': _usernameController
-              .text, // Backend expects 'name' or 'username' - check mismatch logic. Based on Postman sample: "username": "testuser" in request body
-          'username': _usernameController
-              .text, // Sending both just in case, typically Laravel Auth defaults to 'name' but Postman had 'username'
-          'email': _emailController.text,
-          'password': _passwordController.text,
-        }),
-      );
+    final success = await authProvider.register(
+      _usernameController.text,
+      _emailController.text,
+      _passwordController.text,
+    );
 
-      final data = jsonDecode(response.body);
-
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        // Success
-        final token = data['access_token'];
-        if (token != null) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('access_token', token);
-
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, '/home');
-          }
-        }
-      } else {
-        // Error
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(data['message'] ?? 'Registration failed')),
-          );
-        }
+    if (success) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
       }
-    } catch (e) {
+    } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
+          SnackBar(
+              content:
+                  Text(authProvider.errorMessage ?? 'Registration failed')),
         );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
       }
     }
   }
@@ -224,34 +190,36 @@ class _RegisterPageState extends State<RegisterPage> {
                         ),
                       ),
                       const SizedBox(height: 28),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 54,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: primaryColor,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(14),
+                      Consumer<AuthProvider>(builder: (context, auth, _) {
+                        return SizedBox(
+                          width: double.infinity,
+                          height: 54,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryColor,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                              ),
                             ),
-                          ),
-                          onPressed: _isLoading ? null : _register,
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                      color: Colors.white, strokeWidth: 2),
-                                )
-                              : const Text(
-                                  "REGISTER",
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.8,
+                            onPressed: auth.isLoading ? null : _register,
+                            child: auth.isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                        color: Colors.white, strokeWidth: 2),
+                                  )
+                                : const Text(
+                                    "REGISTER",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.8,
+                                    ),
                                   ),
-                                ),
-                        ),
-                      ),
+                          ),
+                        );
+                      }),
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,

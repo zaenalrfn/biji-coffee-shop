@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/order_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../core/routes/app_routes.dart';
 import 'checkout_stepper.dart';
-import 'checkout_shipping_address_page.dart';
 
 enum PaymentMethod { creditCard, bankTransfer, virtualAccount }
 
@@ -15,13 +19,23 @@ class CheckoutPaymentMethodPage extends StatefulWidget {
 class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
   PaymentMethod? _selected = PaymentMethod.creditCard;
 
-  final TextEditingController _nameCtrl =
-      TextEditingController(text: 'Samuel Witwicky');
+  final TextEditingController _nameCtrl = TextEditingController();
   final TextEditingController _cardNumberCtrl =
       TextEditingController(text: '1234 5678 9101 1121');
   final TextEditingController _monthYearCtrl = TextEditingController();
   final TextEditingController _cvvCtrl = TextEditingController();
   final TextEditingController _countryCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final user = Provider.of<AuthProvider>(context, listen: false).user;
+      if (user != null) {
+        _nameCtrl.text = user.name;
+      }
+    });
+  }
 
   @override
   void dispose() {
@@ -34,11 +48,15 @@ class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
   }
 
   void _onNext() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => const CheckoutShippingAddressPage(),
-      ),
-    );
+    // Save payment method
+    String method = 'Credit Card';
+    if (_selected == PaymentMethod.bankTransfer) method = 'Bank Transfer';
+    if (_selected == PaymentMethod.virtualAccount) method = 'Virtual Account';
+
+    Provider.of<OrderProvider>(context, listen: false).setPaymentMethod(method);
+
+    // Navigate to Coupon (Step 2)
+    Navigator.pushNamed(context, AppRoutes.checkoutCoupon);
   }
 
   // reusable text field
@@ -131,42 +149,6 @@ class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
                               color: Colors.white70,
                               fontWeight: FontWeight.w600),
                         ),
-                      ],
-                    )
-                  ],
-                ),
-              ),
-              Container(
-                width: 260,
-                margin: const EdgeInsets.only(right: 16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade800,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-                child: const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Credit Card',
-                        style: TextStyle(color: Colors.white70, fontSize: 16)),
-                    Spacer(),
-                    Text('1234 **** **** ****',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            letterSpacing: 2,
-                            fontWeight: FontWeight.w700)),
-                    Spacer(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('04 / 25',
-                            style: TextStyle(color: Colors.white70)),
-                        Text('KEVIN HARD',
-                            style: TextStyle(
-                                color: Colors.white70,
-                                fontWeight: FontWeight.w600)),
                       ],
                     )
                   ],
@@ -327,16 +309,18 @@ class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
                     const SizedBox(height: 30),
 
                     // TOTAL PAYMENT
-                    Row(
-                      children: [
-                        Text('Total Payment',
-                            style: TextStyle(color: Colors.grey.shade600)),
-                        const Spacer(),
-                        const Text('\$158.0',
-                            style: TextStyle(
-                                fontSize: 26, fontWeight: FontWeight.w800)),
-                      ],
-                    ),
+                    Consumer<CartProvider>(builder: (context, cart, _) {
+                      return Row(
+                        children: [
+                          Text('Total Payment',
+                              style: TextStyle(color: Colors.grey.shade600)),
+                          const Spacer(),
+                          Text('\$${cart.totalPrice.toStringAsFixed(2)}',
+                              style: TextStyle(
+                                  fontSize: 26, fontWeight: FontWeight.w800)),
+                        ],
+                      );
+                    }),
                     const SizedBox(height: 40),
                   ],
                 ),

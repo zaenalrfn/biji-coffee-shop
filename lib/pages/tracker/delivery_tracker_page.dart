@@ -195,7 +195,8 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
       systemOverlayStyle: SystemUiOverlayStyle.dark,
       leading: IconButton(
         icon: const Icon(Icons.arrow_back, color: Colors.black),
-        onPressed: () => Navigator.pop(context),
+        onPressed: () => Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.home, (route) => false),
       ),
       title: const Text(
         "Tracking",
@@ -423,13 +424,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
                         alignment: Alignment.centerRight,
                         child: TextButton(
                           onPressed: () {
-                            _sheetController.animateTo(
-                              _minSheetSize,
-                              duration: const Duration(milliseconds: 300),
-                              curve: Curves.easeOut,
-                            );
+                            Navigator.pushNamedAndRemoveUntil(
+                                context, AppRoutes.home, (route) => false);
                           },
-                          child: const Text("Close"),
+                          child: const Text("Back directly to Home"),
                         ),
                       ),
                     ),

@@ -5,6 +5,9 @@ import 'widgets/promotion_section.dart';
 import 'widgets/category_section.dart';
 import 'widgets/featured_beverages_section.dart';
 
+import 'package:provider/provider.dart';
+import '../../providers/product_provider.dart';
+
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -14,6 +17,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<ProductProvider>(context, listen: false)
+          .fetchProductsAndCategories();
+    });
+  }
 
   void _onNavTap(int index) {
     setState(() => _selectedIndex = index);

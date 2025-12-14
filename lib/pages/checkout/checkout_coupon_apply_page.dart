@@ -1,5 +1,8 @@
-// lib/pages/checkout/checkout_coupon_apply_page.dart
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/order_provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../core/routes/app_routes.dart';
 import 'checkout_stepper.dart';
 
 class CheckoutCouponApplyPage extends StatefulWidget {
@@ -11,9 +14,18 @@ class CheckoutCouponApplyPage extends StatefulWidget {
 }
 
 class _CheckoutCouponApplyPageState extends State<CheckoutCouponApplyPage> {
-  final TextEditingController couponCtrl =
-      TextEditingController(text: '#54856913215');
+  final TextEditingController couponCtrl = TextEditingController();
   bool applyCoupon = false;
+  bool _canSubmit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Prevent accidental double-tap from previous page
+    Future.delayed(const Duration(milliseconds: 1000), () {
+      if (mounted) setState(() => _canSubmit = true);
+    });
+  }
 
   @override
   void dispose() {
@@ -21,12 +33,41 @@ class _CheckoutCouponApplyPageState extends State<CheckoutCouponApplyPage> {
     super.dispose();
   }
 
-  // 🔹 Ubah bagian ini agar diarahkan ke halaman pelacakan
-  void _onNext() {
-    Navigator.pushNamed(context, '/tracker');
+  void _onPlaceOrder() async {
+    final orderProvider = Provider.of<OrderProvider>(context, listen: false);
+    final cartProvider = Provider.of<CartProvider>(context, listen: false);
+
+    try {
+      await orderProvider.createOrder();
+
+      // Clear cart
+      await cartProvider.fetchCart(); // Or implement clearCart() method
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Order placed successfully!')),
+        );
+        Navigator.pushNamedAndRemoveUntil(
+            context, AppRoutes.deliveryTracker, (route) => route.isFirst);
+      }
+    } catch (e) {
+      if (mounted) {
+        // Clean up error message
+        String errorMessage = e.toString().replaceAll('Exception: ', '');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Widget _roundedNextButton() {
+    final isLoading = context.watch<OrderProvider>().isLoading;
+
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: SizedBox(
@@ -38,22 +79,25 @@ class _CheckoutCouponApplyPageState extends State<CheckoutCouponApplyPage> {
               borderRadius: BorderRadius.circular(22),
             ),
           ),
-          onPressed: _onNext,
-          child: Row(
-            children: [
-              const SizedBox(width: 12),
-              const Text(
-                'NEXT',
-                style: TextStyle(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 16,
-                  color: Colors.white,
+          onPressed: (isLoading || !_canSubmit) ? null : _onPlaceOrder,
+          child: isLoading
+              ? const CircularProgressIndicator(color: Colors.white)
+              : Row(
+                  children: [
+                    const SizedBox(width: 12),
+                    const Text(
+                      'PLACE ORDER',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const Spacer(),
+                    const Icon(Icons.check_circle,
+                        size: 22, color: Colors.white),
+                  ],
                 ),
-              ),
-              const Spacer(),
-              const Icon(Icons.play_arrow, size: 22, color: Colors.white),
-            ],
-          ),
         ),
       ),
     );
@@ -112,7 +156,7 @@ class _CheckoutCouponApplyPageState extends State<CheckoutCouponApplyPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _labelledField('Enter Coupon Code', couponCtrl,
-                        hint: '#54856913215'),
+                        hint: 'Promo Code'),
                     Row(
                       children: [
                         Checkbox(
@@ -126,6 +170,14 @@ class _CheckoutCouponApplyPageState extends State<CheckoutCouponApplyPage> {
                           style: TextStyle(fontWeight: FontWeight.w700),
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 20),
+                    Consumer<CartProvider>(
+                      builder: (context, cart, _) => Text(
+                        "Total: \$${cart.totalPrice.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 18),
+                      ),
                     ),
                     const SizedBox(height: 120),
                   ],

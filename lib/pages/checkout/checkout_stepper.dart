@@ -18,13 +18,12 @@ class CheckoutStepper extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final leftLabel = step == 0
-        ? _labels[1] // kalau di step 0, isi kanan tetap Payment
-        : _labels[
-            step - 1]; // kalau di tengah atau akhir, isi kiri = sebelumnya
+        ? '' // Jika step 0, kiri kosong
+        : _labels[step - 1];
 
     final rightLabel = step == _labels.length - 1
-        ? _labels[step - 1] // kalau di step terakhir, isi kanan = sebelumnya
-        : _labels[step + 1]; // kalau belum terakhir, isi kanan = berikutnya
+        ? '' // Jika step terakhir, kanan kosong
+        : _labels[step + 1];
 
     return SafeArea(
       bottom: false,

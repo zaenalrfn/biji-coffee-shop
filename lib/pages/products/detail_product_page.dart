@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../core/routes/app_routes.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -18,7 +21,8 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     final product = widget.product;
 
-    final String imagePath = product['image'] ?? 'assets/images/placeholder.png';
+    final String imagePath =
+        product['image'] ?? 'assets/images/placeholder.png';
     final String title = product['title'] ?? 'Produk Tanpa Nama';
     final double price = (product['price'] ?? 0).toDouble();
 
@@ -217,8 +221,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
           // ========== TOMBOL BACK + FAVORITE ==========
           SafeArea(
             child: Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -247,13 +250,33 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             right: 0,
             child: Container(
               color: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: SizedBox(
                 width: double.infinity,
                 height: 55,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    try {
+                      final int productId = product['id'];
+                      await Provider.of<CartProvider>(context, listen: false)
+                          .addToCart(productId, quantity);
+
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('${title} added to cart!')),
+                        );
+                        // Navigate to Checkout (same as Cart Page)
+                        Navigator.pushNamed(
+                            context, AppRoutes.checkoutShipping);
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to add to cart: $e')),
+                        );
+                      }
+                    }
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF4A2C4B),
                     shape: RoundedRectangleBorder(

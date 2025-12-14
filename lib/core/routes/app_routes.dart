@@ -31,6 +31,7 @@ import '../../pages/store_location/store_location_page.dart';
 import '../../pages/checkout/checkout_payment_method_page.dart';
 import '../../pages/checkout/checkout_shipping_address_page.dart';
 import '../../pages/checkout/checkout_coupon_apply_page.dart';
+import '../../pages/profile/edit_profile_page.dart';
 
 // =========================================================
 
@@ -66,6 +67,7 @@ class AppRoutes {
   static const String checkoutPayment = '/checkout-payment';
   static const String checkoutShipping = '/checkout-shipping';
   static const String checkoutCoupon = '/checkout-coupon';
+  static const String editProfile = '/edit-profile';
   // ==========================================================
 
   // =================== GENERATE ROUTE =======================
@@ -134,6 +136,14 @@ class AppRoutes {
       case checkoutCoupon:
         return MaterialPageRoute(
             builder: (_) => const CheckoutCouponApplyPage());
+      case editProfile:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => EditProfilePage(
+            initialName: args?['name'] ?? '',
+            initialEmail: args?['email'] ?? '',
+          ),
+        );
 
       // ===== Default (404 Page) =====
       default:
