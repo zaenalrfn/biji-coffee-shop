@@ -78,6 +78,29 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<bool> updateProfile(String name, String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      // Call API to update profile
+      final updatedUser = await _apiService.updateProfile(name, email);
+
+      // Update local user state
+      _user = updatedUser;
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     try {
       await _apiService.logout();

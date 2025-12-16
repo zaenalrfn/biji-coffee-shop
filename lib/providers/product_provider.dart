@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/services/api_service.dart';
+import 'package:image_picker/image_picker.dart';
 import '../data/models/product_model.dart';
 import '../data/models/category_model.dart';
 
@@ -37,5 +38,62 @@ class ProductProvider with ChangeNotifier {
             p.categoryName == categoryName ||
             (p.categoryId.toString() == categoryName))
         .toList();
+  }
+
+  Future<void> addProduct(Map<String, String> fields,
+      [XFile? imageFile]) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final newProduct = await _apiService.createProduct(fields, imageFile);
+      _products.add(newProduct);
+      notifyListeners();
+    } catch (e) {
+      print('Error adding product: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> editProduct(int id, Map<String, String> fields,
+      [XFile? imageFile]) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final updatedProduct =
+          await _apiService.updateProduct(id, fields, imageFile);
+      final index = _products.indexWhere((p) => p.id == id);
+      if (index != -1) {
+        _products[index] = updatedProduct;
+      }
+      notifyListeners();
+    } catch (e) {
+      print('Error updating product: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> deleteProduct(int id) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _apiService.deleteProduct(id);
+      _products.removeWhere((p) => p.id == id);
+      notifyListeners();
+    } catch (e) {
+      print('Error deleting product: $e');
+      rethrow;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

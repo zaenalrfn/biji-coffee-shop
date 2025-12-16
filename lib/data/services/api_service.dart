@@ -6,6 +6,7 @@ import '../models/category_model.dart';
 import '../models/product_model.dart';
 import '../models/cart_item_model.dart';
 import '../models/order_model.dart';
+import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../../core/constants/api_constants.dart';
 
 class ApiService {
@@ -86,6 +87,27 @@ class ApiService {
     }
   }
 
+  Future<User> updateProfile(String name, String email) async {
+    final headers = await _getHeaders();
+    final response = await http.put(
+      Uri.parse('${ApiConstants.baseUrl}/user'),
+      headers: headers,
+      body: jsonEncode({
+        'name': name,
+        'email': email,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // Depending on API response structure, user might be in data['user'] or just data
+      // Based on user PROMPT: 'user' => $user
+      return User.fromJson(data['user']);
+    } else {
+      throw Exception('Failed to update profile: ${response.body}');
+    }
+  }
+
   // Products & Categories
   Future<List<Category>> getCategories() async {
     final headers = await _getHeaders();
@@ -119,6 +141,68 @@ class ApiService {
       return list.map((e) => Product.fromJson(e)).toList();
     } else {
       throw Exception('Failed to load products');
+    }
+  }
+
+  // Helper for multipart requests
+  Future<Product> _submitProduct(
+      String method, String url, Map<String, String> fields,
+      [XFile? imageFile]) async {
+    final token = await getToken();
+    var request = http.MultipartRequest(method, Uri.parse(url));
+
+    request.headers.addAll({
+      'Accept': 'application/json',
+      if (token != null) 'Authorization': 'Bearer $token',
+    });
+
+    request.fields.addAll(fields);
+
+    if (imageFile != null) {
+      final bytes = await imageFile.readAsBytes();
+      final multipartFile = http.MultipartFile.fromBytes(
+        'image',
+        bytes,
+        filename: imageFile.name,
+      );
+      request.files.add(multipartFile);
+    }
+
+    final streamedResponse = await request.send();
+    final response = await http.Response.fromStream(streamedResponse);
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      return Product.fromJson(jsonDecode(response.body));
+    } else {
+      throw Exception('Failed to save product: ${response.body}');
+    }
+  }
+
+  Future<Product> createProduct(Map<String, String> fields,
+      [XFile? imageFile]) async {
+    return _submitProduct(
+        'POST', '${ApiConstants.baseUrl}/products', fields, imageFile);
+  }
+
+  Future<Product> updateProduct(int id, Map<String, String> fields,
+      [XFile? imageFile]) async {
+    // Laravels PUT with multipart has issues, commonly utilize POST with _method=PUT
+    // or just POST to update endpoint if configured.
+    // Standard Laravel approach for multipart update is POST with _method = PUT
+    fields['_method'] = 'PUT';
+    return _submitProduct(
+        'POST', '${ApiConstants.baseUrl}/products/$id', fields, imageFile);
+  }
+
+  Future<void> deleteProduct(int id) async {
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/products/$id'),
+      headers: headers,
+    );
+
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed to delete product: ${response.body}');
     }
   }
 

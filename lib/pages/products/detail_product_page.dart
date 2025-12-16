@@ -21,8 +21,10 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
   Widget build(BuildContext context) {
     final product = widget.product;
 
-    final String imagePath =
-        product['image'] ?? 'assets/images/placeholder.png';
+    final String? rawImage = product['image'];
+    final bool isNetworkImage = rawImage != null &&
+        (rawImage.startsWith('http') || rawImage.startsWith('https'));
+    final String imagePath = rawImage ?? 'assets/images/placeholder.png';
     final String title = product['title'] ?? 'Produk Tanpa Nama';
     final double price = (product['price'] ?? 0).toDouble();
 
@@ -57,21 +59,37 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                         child: Hero(
                           tag: "product_${product['id'] ?? title}",
-                          child: Image.asset(
-                            imagePath,
-                            width: double.infinity,
-                            height: 420,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 320,
-                                width: double.infinity,
-                                color: Colors.grey[200],
-                                child: const Icon(Icons.broken_image,
-                                    size: 60, color: Colors.grey),
-                              );
-                            },
-                          ),
+                          child: isNetworkImage
+                              ? Image.network(
+                                  imagePath,
+                                  width: double.infinity,
+                                  height: 420,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 320,
+                                      width: double.infinity,
+                                      color: Colors.grey[200],
+                                      child: const Icon(Icons.broken_image,
+                                          size: 60, color: Colors.grey),
+                                    );
+                                  },
+                                )
+                              : Image.asset(
+                                  imagePath,
+                                  width: double.infinity,
+                                  height: 420,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Container(
+                                      height: 320,
+                                      width: double.infinity,
+                                      color: Colors.grey[200],
+                                      child: const Icon(Icons.broken_image,
+                                          size: 60, color: Colors.grey),
+                                    );
+                                  },
+                                ),
                         ),
                       ),
                     ),

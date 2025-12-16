@@ -56,6 +56,12 @@ class CustomSideNav extends StatelessWidget {
                   ),
                   _buildMenuItem(
                     context,
+                    icon: Icons.inventory_2_outlined,
+                    title: 'Kelola Produk',
+                    route: AppRoutes.manageProducts,
+                  ),
+                  _buildMenuItem(
+                    context,
                     icon: Icons.search,
                     title: 'Search Menu',
                     route: AppRoutes.products,

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
 
 class EditProfilePage extends StatefulWidget {
   final String initialName;
@@ -54,29 +56,66 @@ class _EditProfilePageState extends State<EditProfilePage> {
             SizedBox(
               width: double.infinity,
               height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Implement API update logic here
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                        content: Text('Profile updated (UI Only for now)')),
+              child: Consumer<AuthProvider>(
+                builder: (context, auth, child) {
+                  return ElevatedButton(
+                    onPressed: auth.isLoading
+                        ? null
+                        : () async {
+                            final name = _nameController.text.trim();
+                            final email = _emailController.text.trim();
+
+                            if (name.isEmpty || email.isEmpty) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text('Name and Email cannot be empty')),
+                              );
+                              return;
+                            }
+
+                            final success =
+                                await auth.updateProfile(name, email);
+
+                            if (context.mounted) {
+                              if (success) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                      content: Text(
+                                          'Profile updated successfully!')),
+                                );
+                                Navigator.pop(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                      content: Text(auth.errorMessage ??
+                                          'Update failed')),
+                                );
+                              }
+                            }
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6E4C77),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: auth.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                                color: Colors.white, strokeWidth: 2))
+                        : const Text(
+                            'Save Changes',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                   );
-                  Navigator.pop(context);
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF6E4C77),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  'Save Changes',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
               ),
             ),
           ],

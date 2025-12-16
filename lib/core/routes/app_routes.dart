@@ -33,6 +33,10 @@ import '../../pages/checkout/checkout_shipping_address_page.dart';
 import '../../pages/checkout/checkout_coupon_apply_page.dart';
 import '../../pages/profile/edit_profile_page.dart';
 
+// Product Management
+import '../../pages/admin/manage_products_page.dart';
+import '../../pages/admin/add_edit_product_page.dart';
+import '../../data/models/product_model.dart';
 // =========================================================
 
 class AppRoutes {
@@ -68,6 +72,10 @@ class AppRoutes {
   static const String checkoutShipping = '/checkout-shipping';
   static const String checkoutCoupon = '/checkout-coupon';
   static const String editProfile = '/edit-profile';
+
+  // Admin
+  static const String manageProducts = '/manage-products';
+  static const String addEditProduct = '/add-edit-product';
   // ==========================================================
 
   // =================== GENERATE ROUTE =======================
@@ -144,6 +152,14 @@ class AppRoutes {
             initialEmail: args?['email'] ?? '',
           ),
         );
+
+      // ===== Admin =====
+      case manageProducts:
+        return MaterialPageRoute(builder: (_) => const ManageProductsPage());
+      case addEditProduct:
+        final args = settings.arguments as Product?;
+        return MaterialPageRoute(
+            builder: (_) => AddEditProductPage(product: args));
 
       // ===== Default (404 Page) =====
       default:

@@ -55,7 +55,8 @@ class FeaturedBeveragesSection extends StatelessWidget {
 
           // 🔹 Area swipe — card keluar padding dengan OverflowBox
           SizedBox(
-            height: 245,
+            height:
+                270, // Increased height to prevent overflow with long titles
             child: LayoutBuilder(
               builder: (context, constraints) {
                 return OverflowBox(
@@ -175,8 +176,10 @@ class FeaturedBeveragesSection extends StatelessWidget {
                                             overflow: TextOverflow.ellipsis,
                                             style: const TextStyle(
                                               fontWeight: FontWeight.w600,
-                                              fontSize: 16, // Larger font
-                                              height: 1.3,
+                                              fontSize:
+                                                  15, // Slightly smaller font
+                                              height:
+                                                  1.2, // Tighter line height
                                               color: Color(
                                                   0xFF3E2B47), // Dark Title
                                             ),
