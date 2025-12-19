@@ -336,33 +336,38 @@ class _CartPageState extends State<CartPage>
                               mainAxisAlignment:
                                   MainAxisAlignment.spaceBetween, // penting
                               children: [
-                                // Judul
+                                // 1. Judul
                                 Text(
                                   product.name,
                                   style: const TextStyle(
                                     fontWeight: FontWeight.w600,
-                                    fontSize: 19,
+                                    fontSize:
+                                        16, // Sedikit diperkecil agar muat
                                   ),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
 
-                                // Harga, qty, total
+                                const SizedBox(height: 4),
+
+                                // 2. Harga Satuan
+                                Text(
+                                  "\$${product.price}",
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey,
+                                    fontSize: 14,
+                                  ),
+                                ),
+
+                                const Spacer(),
+
+                                // 3. Baris Bawah: Qty (Kiri) & Total + Hapus (Kanan)
                                 Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
                                   children: [
-                                    // Price
-                                    Text(
-                                      "\$${product.price}",
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.black87,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-
-                                    // Qty Controls (Explicit visible buttons)
+                                    // Qty Controls
                                     Container(
                                       decoration: BoxDecoration(
                                         border: Border.all(
@@ -420,30 +425,14 @@ class _CartPageState extends State<CartPage>
                                       ),
                                     ),
 
-                                    // Total & Delete
-                                    Row(
-                                      children: [
-                                        Text(
-                                          "\$${(product.price * item.quantity).toStringAsFixed(1)}",
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            color: Colors.black,
-                                            fontSize: 16,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        InkWell(
-                                          onTap: () {
-                                            Provider.of<CartProvider>(context,
-                                                    listen: false)
-                                                .removeFromCart(item.id);
-                                          },
-                                          child: const Icon(
-                                              Icons.delete_outline,
-                                              size: 20,
-                                              color: Colors.red),
-                                        ),
-                                      ],
+                                    // Total Price only
+                                    Text(
+                                      "\$${(product.price * item.quantity).toStringAsFixed(1)}",
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.black,
+                                        fontSize: 16,
+                                      ),
                                     ),
                                   ],
                                 ),

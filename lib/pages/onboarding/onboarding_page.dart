@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});
@@ -141,15 +142,19 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
                       // Tombol panah
                       GestureDetector(
-                        onTap: () {
+                        onTap: () async {
                           if (_currentPage < onboardingData.length - 1) {
                             _controller.nextPage(
                               duration: const Duration(milliseconds: 400),
                               curve: Curves.easeInOut,
                             );
                           } else {
-                            Navigator.pushReplacementNamed(
-                                context, AppRoutes.welcome);
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setBool('seen_onboarding', true);
+                            if (context.mounted) {
+                              Navigator.pushReplacementNamed(
+                                  context, AppRoutes.welcome);
+                            }
                           }
                         },
                         child: Container(

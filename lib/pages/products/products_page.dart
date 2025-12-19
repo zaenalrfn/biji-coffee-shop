@@ -196,7 +196,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     child: SizedBox(
-                      height: 40,
+                      height: 50,
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: categoriesList.length,

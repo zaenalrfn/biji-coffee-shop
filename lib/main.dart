@@ -13,9 +13,18 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
 
-  // Check if user is logged in
+  // Check if user is logged in & seen onboarding
   final String? token = prefs.getString('access_token');
-  final String initialRoute = token != null ? AppRoutes.home : AppRoutes.login;
+  final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
+
+  String initialRoute;
+  if (token != null) {
+    initialRoute = AppRoutes.home;
+  } else if (!seenOnboarding) {
+    initialRoute = AppRoutes.onboarding;
+  } else {
+    initialRoute = AppRoutes.welcome;
+  }
 
   runApp(
     MultiProvider(
