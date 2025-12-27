@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../core/routes/app_routes.dart';
+import '../../data/services/wishlist_service.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -253,7 +254,28 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  _buildIconButton(Icons.bookmark_border, () {}),
+                  _buildIconButton(Icons.bookmark_border, () async {
+                    try {
+                      final service = WishlistService();
+                      final int productId = product['id'];
+                      final success = await service.addToWishlist(productId);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(success
+                                ? 'Added to wishlist!'
+                                : 'Already in wishlist'),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Failed to add: $e')),
+                        );
+                      }
+                    }
+                  }),
                 ],
               ),
             ),

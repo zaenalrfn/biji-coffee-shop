@@ -88,7 +88,7 @@ class CustomSideNav extends StatelessWidget {
                     context,
                     icon: Icons.store_outlined,
                     title: 'Store Locations',
-                    route: AppRoutes.storeLocation, // ✅ BENAR
+                    route: AppRoutes.storeLocation,
                   ),
                   _buildMenuItem(
                     context,

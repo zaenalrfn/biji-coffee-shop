@@ -1,6 +1,7 @@
 class Product {
   final int id;
   final String name;
+  final String? subtitle;
   final String description;
   final double price;
   final String? imageUrl;
@@ -10,6 +11,7 @@ class Product {
   Product({
     required this.id,
     required this.name,
+    this.subtitle,
     required this.description,
     required this.price,
     this.imageUrl,
@@ -21,6 +23,7 @@ class Product {
     return Product(
       id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
       name: json['name'] ?? json['title'] ?? '',
+      subtitle: json['subtitle'],
       description: json['description'] ?? '',
       price: json['price'] is num
           ? (json['price'] as num).toDouble()
