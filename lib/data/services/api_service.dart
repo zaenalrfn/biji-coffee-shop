@@ -108,6 +108,42 @@ class ApiService {
     }
   }
 
+  Future<void> forgotPassword(String email) async {
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/forgot-password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({'email': email}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to send OTP: ${response.body}');
+    }
+  }
+
+  Future<void> resetPassword(String email, String otp, String password) async {
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/reset-password'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+      body: jsonEncode({
+        'email': email,
+        'otp': otp,
+        'password': password,
+        'password_confirmation': password,
+      }),
+    );
+
+    if (response.statusCode != 200) {
+      final error = jsonDecode(response.body);
+      throw Exception(error['message'] ?? 'Failed to reset password');
+    }
+  }
+
   // Products & Categories
   Future<List<Category>> getCategories() async {
     final headers = await _getHeaders();
