@@ -42,14 +42,6 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _logout(BuildContext context) async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    await authProvider.logout();
-    if (context.mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-    }
-  }
-
   void _toggleDrawer() {
     if (_scaffoldKey.currentState!.isDrawerOpen) {
       Navigator.of(context).pop();
@@ -84,32 +76,6 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             centerTitle: true,
             actions: [
-              IconButton(
-                icon: const Icon(Icons.logout, color: Colors.white),
-                onPressed: () {
-                  // Show confirmation dialog
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text('Logout'),
-                      content: const Text('Are you sure you want to logout?'),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context),
-                          child: const Text('Cancel'),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            _logout(context);
-                          },
-                          child: const Text('Logout'),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
               IconButton(
                 icon: const Icon(Icons.more_vert, color: Colors.white),
                 onPressed: _toggleDrawer,
