@@ -33,7 +33,7 @@ class Product {
       categoryId: json['category_id'] is int
           ? json['category_id']
           : int.tryParse(json['category_id'].toString()) ?? 0,
-      categoryName: json['category'] != null ? json['category']['name'] : null,
+      categoryName: json['category'] is Map ? json['category']['name'] : null,
     );
   }
 }
