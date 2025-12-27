@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/custom_side_nav.dart';
+import '../../data/models/wishlist_item_model.dart';
+import '../../data/services/wishlist_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -12,6 +14,33 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  final WishlistService _wishlistService = WishlistService();
+  List<WishlistItem> _wishlistItems = [];
+  bool _isLoadingWishlist = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchWishlist();
+  }
+
+  Future<void> _fetchWishlist() async {
+    try {
+      final items = await _wishlistService.getWishlist();
+      if (mounted) {
+        setState(() {
+          _wishlistItems = items.take(5).toList();
+          _isLoadingWishlist = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isLoadingWishlist = false;
+        });
+      }
+    }
+  }
 
   void _logout(BuildContext context) async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -262,25 +291,43 @@ class _ProfilePageState extends State<ProfilePage> {
                       ),
                       const SizedBox(height: 16),
                       Expanded(
-                        child: ListView(
-                          children: [
-                            _buildFavouriteMenu(
-                              image: 'assets/images/bg1.jpg',
-                              title: 'Brewed Cappuccino Latte with Creamy Milk',
-                              category: 'Food',
-                              price: '\$5.8',
-                              rating: '4.0',
-                            ),
-                            const SizedBox(height: 16),
-                            _buildFavouriteMenu(
-                              image: 'assets/images/bg1.jpg',
-                              title: 'Melted Omelette with Spicy Chilli',
-                              category: 'Food',
-                              price: '\$8.2',
-                              rating: '4.0',
-                            ),
-                          ],
-                        ),
+                        child: _isLoadingWishlist
+                            ? const Center(child: CircularProgressIndicator())
+                            : _wishlistItems.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'No favourite items yet',
+                                      style: TextStyle(
+                                          color: Colors.grey.shade500),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    itemCount: _wishlistItems.length,
+                                    itemBuilder: (context, index) {
+                                      final item = _wishlistItems[index];
+                                      final product = item.product;
+
+                                      final rawImage = product.imageUrl;
+                                      final imagePath = rawImage ??
+                                          'assets/images/placeholder.png';
+
+                                      return Padding(
+                                        padding:
+                                            const EdgeInsets.only(bottom: 16),
+                                        child: _buildFavouriteMenu(
+                                          image: imagePath,
+                                          title: product.name,
+                                          category:
+                                              product.categoryName ?? 'Unknown',
+                                          price: '\$${product.price}',
+                                          rating:
+                                              '5.0', // No rating in model yet, default to 5.0
+                                          isNetworkImage: rawImage != null &&
+                                              (rawImage.startsWith('http')),
+                                        ),
+                                      );
+                                    },
+                                  ),
                       ),
                     ],
                   ),
@@ -315,6 +362,7 @@ class _ProfilePageState extends State<ProfilePage> {
     required String category,
     required String price,
     required String rating,
+    bool isNetworkImage = false,
   }) {
     return Container(
       decoration: BoxDecoration(
@@ -332,12 +380,31 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
-            child: Image.asset(
-              image,
-              width: 100,
-              height: 130,
-              fit: BoxFit.cover,
-            ),
+            child: isNetworkImage
+                ? Image.network(
+                    image,
+                    width: 100,
+                    height: 130,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 100,
+                      height: 130,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.broken_image),
+                    ),
+                  )
+                : Image.asset(
+                    image,
+                    width: 100,
+                    height: 130,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      width: 100,
+                      height: 130,
+                      color: Colors.grey[200],
+                      child: const Icon(Icons.image),
+                    ),
+                  ),
           ),
           const SizedBox(width: 14),
           Expanded(
