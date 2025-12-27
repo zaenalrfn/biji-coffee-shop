@@ -38,8 +38,13 @@ class AuthProvider with ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', token);
 
-      // Fetch user details
-      _user = await _apiService.getUser();
+      // Use user details from login response directly
+      if (response.containsKey('user')) {
+        _user = User.fromJson(response['user']);
+      } else {
+        // Fallback if needed (though based on logs, 'user' key exists)
+        _user = await _apiService.getUser();
+      }
 
       _isLoading = false;
       notifyListeners();

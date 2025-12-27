@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 import '../core/routes/app_routes.dart';
 
 class CustomSideNav extends StatelessWidget {
@@ -12,6 +14,10 @@ class CustomSideNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Access user data
+    final user = Provider.of<AuthProvider>(context).user;
+    final bool isAdmin = user?.roles.contains('admin') ?? false;
+
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.75,
       backgroundColor: Colors.white,
@@ -54,12 +60,13 @@ class CustomSideNav extends StatelessWidget {
                     title: 'Home',
                     route: AppRoutes.home,
                   ),
-                  _buildMenuItem(
-                    context,
-                    icon: Icons.inventory_2_outlined,
-                    title: 'Kelola Produk',
-                    route: AppRoutes.manageProducts,
-                  ),
+                  if (isAdmin)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.inventory_2_outlined,
+                      title: 'Kelola Produk',
+                      route: AppRoutes.manageProducts,
+                    ),
                   _buildMenuItem(
                     context,
                     icon: Icons.search,
@@ -136,7 +143,7 @@ class CustomSideNav extends StatelessWidget {
                     context,
                     icon: Icons.logout_outlined,
                     title: 'Logout',
-                    route: AppRoutes.login,
+                    onTap: () => _handleLogout(context),
                   ),
                 ],
               ),
@@ -171,12 +178,47 @@ class CustomSideNav extends StatelessWidget {
     );
   }
 
+  Future<void> _handleLogout(BuildContext context) async {
+    // Show confirmation dialog before logging out
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to logout?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext); // Close dialog
+
+              // Perform logout using the outer context which is still valid
+              final authProvider =
+                  Provider.of<AuthProvider>(context, listen: false);
+              await authProvider.logout();
+
+              // Navigate to login
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(
+                    context, AppRoutes.login, (route) => false);
+              }
+            },
+            child: const Text('Logout'),
+          ),
+        ],
+      ),
+    );
+  }
+
   // ===== WIDGET BUILDER MENU ITEM =====
   Widget _buildMenuItem(
     BuildContext context, {
     required IconData icon,
     required String title,
-    required String route,
+    String? route,
+    VoidCallback? onTap,
   }) {
     return ListTile(
       leading: Icon(icon, color: Colors.black54),
@@ -184,7 +226,12 @@ class CustomSideNav extends StatelessWidget {
         title,
         style: const TextStyle(fontSize: 14, color: Colors.black87),
       ),
-      onTap: () => _navigateTo(context, route),
+      onTap: onTap ??
+          () {
+            if (route != null) {
+              _navigateTo(context, route);
+            }
+          },
     );
   }
 }
