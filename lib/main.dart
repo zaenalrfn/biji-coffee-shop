@@ -11,6 +11,7 @@ import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/banner_provider.dart';
 import 'providers/store_provider.dart';
+import 'data/services/auth_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,10 +20,26 @@ void main() async {
   } catch (e) {
     debugPrint("Failed to load .env file: $e");
   }
+  // Check URL for token (Web Redirect Flow)
+  String? urlToken = Uri.base.queryParameters['token'];
+  if (urlToken != null) {
+    debugPrint("Found token in URL: $urlToken");
+    await AuthService().saveToken(urlToken);
+    // Optional: Clean URL? Hard to do without reloading.
+    // For now, simple redirect flow.
+  }
+
   final prefs = await SharedPreferences.getInstance();
 
   // Check if user is logged in & seen onboarding
-  final String? token = prefs.getString('access_token');
+  // We check AuthService first as it might have just been updated from URL
+  String? token =
+      await AuthService().getToken(); // Check consistent secure storage/url
+  if (token == null) {
+    // Fallback to legacy prefs if migration isn't 100% complete or for safety
+    token = prefs.getString('access_token');
+  }
+
   final bool seenOnboarding = prefs.getBool('seen_onboarding') ?? false;
 
   String initialRoute;

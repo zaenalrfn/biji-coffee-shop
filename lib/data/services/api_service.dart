@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/user_model.dart';
 import '../models/category_model.dart';
 import '../models/product_model.dart';
@@ -11,11 +11,13 @@ import '../models/cart_item_model.dart';
 import '../models/order_model.dart';
 import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../../core/constants/api_constants.dart';
+import 'auth_service.dart';
 
 class ApiService {
+  final AuthService _authService = AuthService();
+
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token');
+    return await _authService.getToken();
   }
 
   Future<Map<String, String>> _getHeaders() async {

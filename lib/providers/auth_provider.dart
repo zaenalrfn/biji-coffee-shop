@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../data/services/auth_service.dart';
 import '../data/services/api_service.dart';
 import '../data/models/user_model.dart';
 
@@ -36,8 +36,9 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await _apiService.login(email, password);
       final token = response['access_token']; // Adjust based on API response
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('access_token', token);
+
+      // Use AuthService to save token
+      await AuthService().saveToken(token);
 
       // Use user details from login response directly
       if (response.containsKey('user')) {
@@ -68,8 +69,8 @@ class AuthProvider with ChangeNotifier {
       // Assuming register returns token, if not, user needs to login
       if (response.containsKey('access_token')) {
         final token = response['access_token'];
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', token);
+        // Use AuthService to save token
+        await AuthService().saveToken(token);
         _user = await _apiService.getUser();
       }
 
@@ -114,8 +115,7 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       // Ignore errors on logout
     }
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
+    await AuthService().deleteToken();
     _user = null;
     notifyListeners();
   }
