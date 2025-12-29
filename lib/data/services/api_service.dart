@@ -634,7 +634,7 @@ class ApiService {
     }
   }
 
-  Future<void> createOrder({
+  Future<String?> createOrder({
     Map<String, dynamic>? shippingAddress,
     String? paymentMethod,
   }) async {
@@ -650,7 +650,17 @@ class ApiService {
       body: body,
     );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      // Attempt to find snap_token in probable locations
+      if (data is Map) {
+        if (data.containsKey('snap_token')) return data['snap_token'];
+        if (data.containsKey('data') && data['data'] is Map) {
+          return data['data']['snap_token'];
+        }
+      }
+      return null;
+    } else {
       throw Exception('Failed to create order: ${response.body}');
     }
   }

@@ -20,6 +20,11 @@ class CartProvider with ChangeNotifier {
     return total;
   }
 
+  void clearCartLocal() {
+    _cartItems = [];
+    notifyListeners();
+  }
+
   Future<void> fetchCart() async {
     _isLoading = true;
     notifyListeners();

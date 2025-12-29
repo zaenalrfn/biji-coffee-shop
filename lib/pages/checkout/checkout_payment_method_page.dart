@@ -17,16 +17,6 @@ class CheckoutPaymentMethodPage extends StatefulWidget {
 class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
   bool _isLoading = false;
 
-  @override
-  void initState() {
-    super.initState();
-    // Set default payment method automatically as only Midtrans is available
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<OrderProvider>(context, listen: false)
-          .setPaymentMethod('midtrans');
-    });
-  }
-
   void _onPlaceOrder() async {
     setState(() => _isLoading = true);
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
