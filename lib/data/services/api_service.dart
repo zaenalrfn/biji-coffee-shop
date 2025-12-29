@@ -1,5 +1,5 @@
 import 'dart:convert';
-// import 'dart:io'; // Removed for Web compatibility
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -90,8 +90,7 @@ class ApiService {
     }
   }
 
-  Future<User> updateProfile(
-      String name, String email, XFile? imageFile) async {
+  Future<User> updateProfile(String name, String email, File? imageFile) async {
     final token = await getToken();
     // Using POST with _method: PUT is standard for Laravel file uploads on update
     var uri = Uri.parse('${ApiConstants.baseUrl}/user');
@@ -110,11 +109,9 @@ class ApiService {
     request.fields['_method'] = 'PUT'; // Method spoofing
 
     if (imageFile != null) {
-      final bytes = await imageFile.readAsBytes();
-      request.files.add(http.MultipartFile.fromBytes(
+      request.files.add(await http.MultipartFile.fromPath(
         'image', // Field name expected by backend
-        bytes,
-        filename: imageFile.name,
+        imageFile.path,
       ));
     }
 
@@ -262,7 +259,7 @@ class ApiService {
 
   Future<BannerModel> createBanner({
     required String name,
-    XFile? imageFile,
+    File? imageFile,
     String? imageUrl,
   }) async {
     final headers = await _getHeaders();
@@ -277,11 +274,9 @@ class ApiService {
     }
 
     if (imageFile != null) {
-      final bytes = await imageFile.readAsBytes();
-      request.files.add(http.MultipartFile.fromBytes(
+      request.files.add(await http.MultipartFile.fromPath(
         'image',
-        bytes,
-        filename: imageFile.name,
+        imageFile.path,
       ));
     }
 
@@ -301,7 +296,7 @@ class ApiService {
   Future<BannerModel> updateBanner({
     required int id,
     required String name,
-    XFile? imageFile,
+    File? imageFile,
     String? imageUrl,
   }) async {
     final headers = await _getHeaders();
@@ -320,11 +315,9 @@ class ApiService {
     }
 
     if (imageFile != null) {
-      final bytes = await imageFile.readAsBytes();
-      request.files.add(http.MultipartFile.fromBytes(
+      request.files.add(await http.MultipartFile.fromPath(
         'image',
-        bytes,
-        filename: imageFile.name,
+        imageFile.path,
       ));
     }
 
@@ -378,7 +371,7 @@ class ApiService {
     required double longitude,
     required String openTime,
     required String closeTime,
-    XFile? imageFile,
+    File? imageFile,
   }) async {
     final token = await getToken();
     var uri = Uri.parse('${ApiConstants.baseUrl}/stores');
@@ -397,11 +390,9 @@ class ApiService {
     request.fields['close_time'] = closeTime;
 
     if (imageFile != null) {
-      final bytes = await imageFile.readAsBytes();
-      request.files.add(http.MultipartFile.fromBytes(
+      request.files.add(await http.MultipartFile.fromPath(
         'image',
-        bytes,
-        filename: imageFile.name,
+        imageFile.path,
       ));
     }
 
@@ -426,7 +417,7 @@ class ApiService {
     required double longitude,
     required String openTime,
     required String closeTime,
-    XFile? imageFile,
+    File? imageFile,
   }) async {
     final token = await getToken();
     var uri = Uri.parse('${ApiConstants.baseUrl}/stores/$id');
@@ -445,11 +436,9 @@ class ApiService {
     request.fields['close_time'] = closeTime;
 
     if (imageFile != null) {
-      final bytes = await imageFile.readAsBytes();
-      request.files.add(http.MultipartFile.fromBytes(
+      request.files.add(await http.MultipartFile.fromPath(
         'image',
-        bytes,
-        filename: imageFile.name,
+        imageFile.path,
       ));
     }
 
@@ -634,7 +623,131 @@ class ApiService {
     }
   }
 
-  Future<String?> createOrder({
+  // Admin: Get All Orders
+  Future<List<Order>> getAdminOrders() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/admin/orders'), // Corrected Endpoint
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List list =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return list.map((e) => Order.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load admin orders: ${response.body}');
+    }
+  }
+
+  // Admin: Update Order Status
+  Future<Order> updateOrderStatus(int id, String status) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse(
+          '${ApiConstants.baseUrl}/admin/orders/$id'), // Corrected Endpoint
+      headers: headers,
+      body: jsonEncode({'status': status}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Order.fromJson(data['data'] ?? data);
+    } else {
+      throw Exception('Failed to update order status: ${response.body}');
+    }
+  }
+
+  // Admin: Delete Order
+  Future<void> deleteOrder(int id) async {
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/admin/orders/$id'),
+      headers: headers,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete order: ${response.body}');
+    }
+  }
+
+  // --- Coupons ---
+
+  // User: Check Coupon
+  Future<Map<String, dynamic>> checkCoupon(
+      String code, double totalAmount) async {
+    final headers = await _getHeaders();
+    final body = jsonEncode({
+      'code': code,
+      'total_amount': totalAmount,
+    });
+
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/check-coupon'),
+      headers: headers,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      // Expecting { "valid": true, "discount_amount": 1000, "coupon": {...} }
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Invalid coupon or error: ${response.body}');
+    }
+  }
+
+  // Admin: Get Coupons
+  Future<List<dynamic>> getAdminCoupons() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/admin/coupons'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final dynamic data = jsonDecode(response.body);
+      if (data is List) {
+        return data; // Direct list
+      } else if (data is Map &&
+          data.containsKey('data') &&
+          data['data'] is List) {
+        return (data['data'] as List).toList(); // Wrapped in data
+      }
+      return []; // Fallback
+    } else {
+      throw Exception('Failed to load coupons');
+    }
+  }
+
+  // Admin: Create Coupon
+  Future<void> createCoupon(Map<String, dynamic> couponData) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/admin/coupons'),
+      headers: headers,
+      body: jsonEncode(couponData),
+    );
+
+    if (response.statusCode != 201 && response.statusCode != 200) {
+      throw Exception('Failed to create coupon: ${response.body}');
+    }
+  }
+
+  // Admin: Delete Coupon
+  Future<void> deleteCoupon(int id) async {
+    final headers = await _getHeaders();
+    final response = await http.delete(
+      Uri.parse('${ApiConstants.baseUrl}/admin/coupons/$id'),
+      headers: headers,
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to delete coupon: ${response.body}');
+    }
+  }
+
+  Future<Map<String, dynamic>> createOrder({
     Map<String, dynamic>? shippingAddress,
     String? paymentMethod,
   }) async {
@@ -651,15 +764,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
-      final data = jsonDecode(response.body);
-      // Attempt to find snap_token in probable locations
-      if (data is Map) {
-        if (data.containsKey('snap_token')) return data['snap_token'];
-        if (data.containsKey('data') && data['data'] is Map) {
-          return data['data']['snap_token'];
-        }
-      }
-      return null;
+      return jsonDecode(response.body);
     } else {
       throw Exception('Failed to create order: ${response.body}');
     }

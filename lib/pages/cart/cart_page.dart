@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
+
 import '../../providers/cart_provider.dart';
+import '../../providers/order_provider.dart';
 import '../../data/models/cart_item_model.dart';
+import '../../data/models/order_model.dart';
 import '../../../core/routes/app_routes.dart';
-import '../../widgets/custom_side_nav.dart'; // import
+import '../../widgets/custom_side_nav.dart';
+
+// ... (existing imports but make sure OrderProvider is imported)
 
 class CartPage extends StatefulWidget {
   const CartPage({super.key});
@@ -17,8 +22,7 @@ class _CartPageState extends State<CartPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   late PageController _pageController;
-  final GlobalKey<ScaffoldState> _scaffoldKey =
-      GlobalKey<ScaffoldState>(); // Key for Scaffold
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
   void initState() {
@@ -36,28 +40,21 @@ class _CartPageState extends State<CartPage>
       }
     });
 
-    // Fetch cart data from API
+    // Fetch data
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<CartProvider>(context, listen: false).fetchCart();
+      Provider.of<OrderProvider>(context, listen: false).fetchOrders();
     });
-  }
-
-  // Filter items based on tab status.
-  // Since API CartItem usually represents "active cart", we treat "All" as valid.
-  // "Delivery" and "Done" are placeholders for Order History in this context.
-  List<CartItem> _filterItems(String status, List<CartItem> allItems) {
-    if (status == "All") return allItems;
-    // Return empty for Delivery/Done as Cart API only returns current active cart
-    return [];
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey, // Assign key
+      key: _scaffoldKey,
       backgroundColor: Colors.white,
-      drawer: const CustomSideNav(), // Add drawer
+      drawer: const CustomSideNav(),
       appBar: AppBar(
+        // ... (Keep existing AppBar)
         elevation: 0,
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
@@ -79,54 +76,60 @@ class _CartPageState extends State<CartPage>
           IconButton(
             icon: const Icon(Icons.more_vert, color: Colors.black),
             onPressed: () {
-              _scaffoldKey.currentState?.openDrawer(); // Open drawer
+              _scaffoldKey.currentState?.openDrawer();
             },
           ),
         ],
       ),
 
-      // 🧾 Tombol bawah
-      bottomNavigationBar:
-          Consumer<CartProvider>(builder: (context, cart, child) {
-        return Container(
-          padding: const EdgeInsets.all(30),
-          color: Colors.white,
-          child: ElevatedButton(
-            onPressed: cart.cartItems.isEmpty
-                ? null
-                : () {
-                    // Arahkan ke halaman checkout
-                    Navigator.pushNamed(context, AppRoutes.checkoutShipping);
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF3E2B47),
-              minimumSize: const Size(double.infinity, 55),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              disabledBackgroundColor: Colors.grey,
-            ),
-            child: cart.isLoading
-                ? const SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                        color: Colors.white, strokeWidth: 2))
-                : const Text(
-                    "PLACE ORDER",
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+      // 🧾 Place Order Button only for Cart Tab
+      bottomNavigationBar: AnimatedBuilder(
+          animation: _tabController,
+          builder: (context, child) {
+            // Only show button on Tab 0 (Cart)
+            if (_tabController.index != 0) return const SizedBox.shrink();
+
+            return Consumer<CartProvider>(builder: (context, cart, child) {
+              return Container(
+                padding: const EdgeInsets.all(30),
+                color: Colors.white,
+                child: ElevatedButton(
+                  onPressed: cart.cartItems.isEmpty
+                      ? null
+                      : () {
+                          Navigator.pushNamed(
+                              context, AppRoutes.checkoutShipping);
+                        },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF3E2B47),
+                    minimumSize: const Size(double.infinity, 55),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
+                    disabledBackgroundColor: Colors.grey,
                   ),
-          ),
-        );
-      }),
+                  child: cart.isLoading
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(
+                              color: Colors.white, strokeWidth: 2))
+                      : const Text(
+                          "PLACE ORDER",
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
+              );
+            });
+          }),
 
       body: Column(
         children: [
-          // 🔍 Search Bar
+          // ... (Search Bar - keep existing)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
             child: Container(
@@ -176,49 +179,53 @@ class _CartPageState extends State<CartPage>
             ),
           ),
 
-          // 📄 Konten tiap tab dengan efek swipe + animasi fade-slide
+          // 📄 Page View
           Expanded(
-            child: Consumer<CartProvider>(builder: (context, cart, child) {
-              if (cart.isLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
+            child: PageView(
+              controller: _pageController,
+              onPageChanged: (index) {
+                _tabController.animateTo(index);
+              },
+              children: [
+                // 1. Cart Tab
+                Consumer<CartProvider>(builder: (context, cart, child) {
+                  if (cart.isLoading)
+                    return const Center(child: CircularProgressIndicator());
+                  return _buildCartList(cart.cartItems);
+                }),
 
-              return PageView.builder(
-                controller: _pageController,
-                itemCount: 3,
-                onPageChanged: (index) {
-                  _tabController.animateTo(index);
-                },
-                itemBuilder: (context, index) {
-                  final status = ["All", "Delivery", "Done"][index];
-                  final items = _filterItems(status, cart.cartItems);
+                // 2. Delivery Tab (Pending/Paid/Shipped)
+                Consumer<OrderProvider>(builder: (context, orderArgs, child) {
+                  if (orderArgs.isLoading)
+                    return const Center(child: CircularProgressIndicator());
 
-                  return AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 350),
-                    transitionBuilder: (child, animation) {
-                      final fade = CurvedAnimation(
-                          parent: animation, curve: Curves.ease);
-                      final slide = Tween<Offset>(
-                        begin: const Offset(0.1, 0),
-                        end: Offset.zero,
-                      ).animate(animation);
+                  // Filter active orders
+                  final activeOrders = orderArgs.orders
+                      .where((o) =>
+                          o.status == 'pending' ||
+                          o.status == 'paid' ||
+                          o.status == 'shipped' ||
+                          o.status == 'processing')
+                      .toList();
 
-                      return FadeTransition(
-                        opacity: fade,
-                        child: SlideTransition(
-                          position: slide,
-                          child: child,
-                        ),
-                      );
-                    },
-                    child: _buildCartList(
-                      items,
-                      key: ValueKey(status),
-                    ),
-                  );
-                },
-              );
-            }),
+                  return _buildOrderList(activeOrders);
+                }),
+
+                // 3. Done Tab (Completed/Cancelled)
+                Consumer<OrderProvider>(builder: (context, orderArgs, child) {
+                  if (orderArgs.isLoading)
+                    return const Center(child: CircularProgressIndicator());
+
+                  // Filter completed orders
+                  final completedOrders = orderArgs.orders
+                      .where((o) =>
+                          o.status == 'completed' || o.status == 'cancelled')
+                      .toList();
+
+                  return _buildOrderList(completedOrders);
+                }),
+              ],
+            ),
           ),
         ],
       ),
@@ -251,12 +258,171 @@ class _CartPageState extends State<CartPage>
     );
   }
 
-  // 🧺 Daftar isi cart
+  // 📦 Order List Widget
+  Widget _buildOrderList(List<Order> orders) {
+    if (orders.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: () async {
+          await Provider.of<OrderProvider>(context, listen: false)
+              .fetchOrders();
+        },
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: const [
+            Center(
+                child: Text("No orders found",
+                    style: TextStyle(color: Colors.grey)))
+          ],
+        ),
+      );
+    }
+
+    return RefreshIndicator(
+        onRefresh: () async {
+          await Provider.of<OrderProvider>(context, listen: false)
+              .fetchOrders();
+        },
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: orders.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 16),
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            final firstItem = (order.items != null && order.items!.isNotEmpty)
+                ? order.items!.first
+                : null;
+
+            return Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          firstItem != null && firstItem.product != null
+                              ? firstItem.product!.name
+                              : "Order #${order.orderNumber.isNotEmpty ? order.orderNumber : order.id}",
+                          style: const TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 16),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(order.status).withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          order.status.toUpperCase(),
+                          style: TextStyle(
+                            color: _getStatusColor(order.status),
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                  const Divider(),
+                  Row(
+                    children: [
+                      if (firstItem != null &&
+                          firstItem.product != null &&
+                          firstItem.product!.imageUrl != null)
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.network(
+                            firstItem.product!.imageUrl!,
+                            width: 60,
+                            height: 60,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => Container(
+                                color: Colors.grey[200], width: 60, height: 60),
+                          ),
+                        )
+                      else
+                        Container(
+                            color: Colors.grey[200],
+                            width: 60,
+                            height: 60,
+                            child: const Icon(Icons.shopping_bag)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (firstItem != null && firstItem.product != null)
+                              Text(firstItem.product!.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w600)),
+                            Text("${order.items?.length ?? 0} Items",
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 13)),
+                            Text(
+                                order
+                                    .createdAt, // You might need DateTime parsing here
+                                style: const TextStyle(
+                                    color: Colors.grey, fontSize: 12)),
+                          ],
+                        ),
+                      ),
+                      Text(
+                        "\$${order.totalPrice.toStringAsFixed(2)}",
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            );
+          },
+        ));
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return Colors.orange;
+      case 'paid':
+        return Colors.blue;
+      case 'processing':
+        return Colors.blue;
+      case 'shipped':
+        return Colors.purple;
+      case 'completed':
+        return Colors.green;
+      case 'cancelled':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  // 🧺 Daftar isi cart (Keep existing)
   Widget _buildCartList(List<CartItem> items, {Key? key}) {
     if (items.isEmpty) {
       return Center(
         key: key,
-        child: const Text("No items found",
+        child: const Text("Your cart is empty",
             style: TextStyle(color: Colors.black54)),
       );
     }

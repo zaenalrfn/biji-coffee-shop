@@ -105,6 +105,24 @@ class CustomSideNav extends StatelessWidget {
                             route: AppRoutes.manageStores,
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: _buildMenuItem(
+                            context,
+                            icon: Icons.receipt_long_outlined,
+                            title: 'Kelola Transaksi',
+                            route: AppRoutes.manageTransactions,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: _buildMenuItem(
+                            context,
+                            icon: Icons.local_offer_outlined,
+                            title: 'Kelola Kupon',
+                            route: AppRoutes.manageCoupons,
+                          ),
+                        ),
                       ],
                     ),
                   _buildMenuItem(
