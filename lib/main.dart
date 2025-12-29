@@ -13,6 +13,7 @@ import 'providers/banner_provider.dart';
 import 'providers/store_provider.dart';
 import 'providers/admin_transaction_provider.dart';
 import 'providers/coupon_provider.dart';
+import 'providers/point_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +49,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => StoreProvider()),
         ChangeNotifierProvider(create: (_) => AdminTransactionProvider()),
         ChangeNotifierProvider(create: (_) => CouponProvider()),
+        ChangeNotifierProvider(create: (_) => PointProvider()),
       ],
       child: CoffeeShopApp(initialRoute: initialRoute),
     ),

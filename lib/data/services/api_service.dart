@@ -780,4 +780,43 @@ class ApiService {
       throw Exception('Failed to create order: ${response.body}');
     }
   }
+
+  // ================= POINTS & REWARDS =================
+
+  /// Get user's current PBC points
+  Future<int> getUserPoints() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/points'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // Handle different possible response formats
+      if (data is Map && data.containsKey('points')) {
+        return data['points'] as int;
+      } else if (data is Map && data.containsKey('data')) {
+        return data['data']['points'] as int;
+      }
+      return 0;
+    } else {
+      throw Exception('Failed to get user points: ${response.body}');
+    }
+  }
+
+  /// Get rewards page data (challenge progress, etc.)
+  Future<Map<String, dynamic>> getRewardsData() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/rewards'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get rewards data: ${response.body}');
+    }
+  }
 }
