@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -22,7 +23,7 @@ class _AddEditStorePageState extends State<AddEditStorePage> {
   late TextEditingController _longController;
   late TextEditingController _openTimeController;
   late TextEditingController _closeTimeController;
-  File? _selectedImage;
+  XFile? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -56,7 +57,7 @@ class _AddEditStorePageState extends State<AddEditStorePage> {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        _selectedImage = File(image.path);
+        _selectedImage = image;
       });
     }
   }
@@ -106,6 +107,41 @@ class _AddEditStorePageState extends State<AddEditStorePage> {
     }
   }
 
+  Widget _buildImagePreview() {
+    if (_selectedImage != null) {
+      if (kIsWeb) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(_selectedImage!.path, fit: BoxFit.cover),
+        );
+      } else {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.file(File(_selectedImage!.path), fit: BoxFit.cover),
+        );
+      }
+    } else if (widget.store?.image != null) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          widget.store!.image!,
+          fit: BoxFit.cover,
+          errorBuilder: (ctx, err, stack) =>
+              const Center(child: Icon(Icons.error)),
+        ),
+      );
+    } else {
+      return const Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.camera_alt, size: 40, color: Colors.grey),
+          SizedBox(height: 8),
+          Text('Tap to select image', style: TextStyle(color: Colors.grey)),
+        ],
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.store != null;
@@ -142,31 +178,7 @@ class _AddEditStorePageState extends State<AddEditStorePage> {
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: Colors.grey[300]!),
                   ),
-                  child: _selectedImage != null
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Image.file(_selectedImage!, fit: BoxFit.cover),
-                        )
-                      : widget.store?.image != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.network(
-                                widget.store!.image!,
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, err, stack) =>
-                                    const Center(child: Icon(Icons.error)),
-                              ),
-                            )
-                          : const Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.camera_alt,
-                                    size: 40, color: Colors.grey),
-                                SizedBox(height: 8),
-                                Text('Tap to select image',
-                                    style: TextStyle(color: Colors.grey)),
-                              ],
-                            ),
+                  child: _buildImagePreview(),
                 ),
               ),
               const SizedBox(height: 24),

@@ -1,5 +1,6 @@
-import 'dart:io';
+// import 'dart:io'; // Removed for web compatibility
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../data/models/store_model.dart';
 import '../data/services/api_service.dart';
 
@@ -32,7 +33,7 @@ class StoreProvider with ChangeNotifier {
     required double longitude,
     required String openTime,
     required String closeTime,
-    File? imageFile,
+    XFile? imageFile,
   }) async {
     _isLoading = true;
     notifyListeners();
@@ -64,7 +65,7 @@ class StoreProvider with ChangeNotifier {
     required double longitude,
     required String openTime,
     required String closeTime,
-    File? imageFile,
+    XFile? imageFile,
   }) async {
     _isLoading = true;
     notifyListeners();

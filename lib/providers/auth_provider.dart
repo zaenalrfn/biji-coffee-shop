@@ -1,6 +1,8 @@
-import 'dart:io';
+// import 'dart:io'; // Removed for web compatibility
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../data/services/api_service.dart';
 import '../data/models/user_model.dart';
 
@@ -16,15 +18,37 @@ class AuthProvider with ChangeNotifier {
   bool get isAuthenticated => _user != null;
 
   Future<void> checkLoginStatus() async {
+    // 1. Try to load user from local cache first (OFFLINE SUPPORT)
+    _user = await _loadUserLocally();
+    notifyListeners();
+
     final token = await _apiService.getToken();
     if (token != null) {
       try {
-        _user = await _apiService.getUser();
+        // 2. Refresh from API
+        final onlineUser = await _apiService.getUser();
+        _user = onlineUser;
+        // 3. Update local cache
+        await _saveUserLocally(onlineUser);
       } catch (e) {
-        // Token might be invalid
-        await logout();
+        debugPrint('CheckLoginStatus error: $e');
+        // Only logout if explicitly unauthenticated (401)
+        // Adjust string check based on your specific 401 exception message
+        if (e.toString().contains('Unauthenticated') ||
+            e.toString().contains('401')) {
+          await logout();
+        } else {
+          // If network error, we stay logged in with cached user
+          // If no cached user, we might be in trouble, but let's hope for cache.
+          if (_user == null) {
+            await logout(); // No cache + No API = Logout
+          }
+        }
       }
       notifyListeners();
+    } else {
+      // No token? Clear everything
+      await logout();
     }
   }
 
@@ -35,16 +59,18 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final response = await _apiService.login(email, password);
-      final token = response['access_token']; // Adjust based on API response
+      final token = response['access_token'];
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('access_token', token);
 
-      // Use user details from login response directly
       if (response.containsKey('user')) {
         _user = User.fromJson(response['user']);
+        // Save to cache
+        await _saveUserLocally(_user!);
       } else {
-        // Fallback if needed (though based on logs, 'user' key exists)
-        _user = await _apiService.getUser();
+        final fetchedUser = await _apiService.getUser();
+        _user = fetchedUser;
+        await _saveUserLocally(fetchedUser);
       }
 
       _isLoading = false;
@@ -65,12 +91,15 @@ class AuthProvider with ChangeNotifier {
 
     try {
       final response = await _apiService.register(name, email, password);
-      // Assuming register returns token, if not, user needs to login
+
       if (response.containsKey('access_token')) {
         final token = response['access_token'];
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', token);
-        _user = await _apiService.getUser();
+
+        final fetchedUser = await _apiService.getUser();
+        _user = fetchedUser;
+        await _saveUserLocally(fetchedUser);
       }
 
       _isLoading = false;
@@ -84,7 +113,8 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile(String name, String email, File? imageFile) async {
+  Future<bool> updateProfile(
+      String name, String email, XFile? imageFile) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -96,6 +126,7 @@ class AuthProvider with ChangeNotifier {
 
       // Update local user state
       _user = updatedUser;
+      await _saveUserLocally(updatedUser);
 
       _isLoading = false;
       notifyListeners();
@@ -112,11 +143,37 @@ class AuthProvider with ChangeNotifier {
     try {
       await _apiService.logout();
     } catch (e) {
-      // Ignore errors on logout
+      debugPrint("Logout error: $e");
     }
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('access_token');
+    await prefs.remove('user_data'); // Clear cache
+
     _user = null;
     notifyListeners();
+  }
+
+  // 💾 Cache Helpers
+  Future<void> _saveUserLocally(User user) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_data', jsonEncode(user.toJson()));
+    } catch (e) {
+      debugPrint("Failed to save user locally: $e");
+    }
+  }
+
+  Future<User?> _loadUserLocally() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userData = prefs.getString('user_data');
+      if (userData != null) {
+        return User.fromJson(jsonDecode(userData));
+      }
+    } catch (e) {
+      debugPrint("Failed to load user locally: $e");
+    }
+    return null;
   }
 }

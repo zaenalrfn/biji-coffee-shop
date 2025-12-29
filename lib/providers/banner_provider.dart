@@ -1,5 +1,6 @@
-import 'dart:io';
+// import 'dart:io'; // Removed for web compatibility
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../data/models/banner_model.dart';
 import '../data/services/api_service.dart';
 
@@ -27,7 +28,7 @@ class BannerProvider with ChangeNotifier {
   }
 
   Future<void> addBanner(String name,
-      {File? imageFile, String? imageUrl}) async {
+      {XFile? imageFile, String? imageUrl}) async {
     _isLoading = true;
     notifyListeners();
 
@@ -49,7 +50,7 @@ class BannerProvider with ChangeNotifier {
   }
 
   Future<void> updateBanner(int id, String name,
-      {File? imageFile, String? imageUrl}) async {
+      {XFile? imageFile, String? imageUrl}) async {
     _isLoading = true;
     notifyListeners();
 
