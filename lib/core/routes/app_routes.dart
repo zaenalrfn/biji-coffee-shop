@@ -51,9 +51,21 @@ import '../../data/models/banner_model.dart';
 import '../../pages/admin/manage_stores_page.dart';
 import '../../pages/admin/add_edit_store_page.dart';
 import '../../data/models/store_model.dart';
+import '../../pages/admin/manage_transactions_page.dart';
+import '../../pages/admin/transaction_detail_page.dart';
+import '../../data/models/order_model.dart';
+
+// Coupon Management
+import '../../pages/admin/manage_coupons_page.dart';
+import '../../pages/admin/add_edit_coupon_page.dart';
+
 // =========================================================
 
 class AppRoutes {
+// ...
+// (Imports are at top, but I'm replacing near header_section if using multi_replace or use replace with big chunk)
+// Check imports first
+
   // =================== DAFTAR ROUTE NAME ===================
 
   // Umum
@@ -97,6 +109,12 @@ class AppRoutes {
   static const String addEditBanner = '/add-edit-banner';
   static const String manageStores = '/manage-stores';
   static const String addEditStore = '/add-edit-store';
+
+  static const String manageTransactions = '/manage-transactions';
+  static const String transactionDetail = '/transaction-detail';
+
+  static const String manageCoupons = '/manage-coupons'; // New
+  static const String addEditCoupon = '/add-edit-coupon'; // New
   // ==========================================================
 
   // =================== GENERATE ROUTE =======================
@@ -206,6 +224,19 @@ class AppRoutes {
       case addEditStore:
         final args = settings.arguments as StoreModel?;
         return MaterialPageRoute(builder: (_) => AddEditStorePage(store: args));
+
+      case manageTransactions:
+        return MaterialPageRoute(
+            builder: (_) => const ManageTransactionsPage());
+      case transactionDetail:
+        final args = settings.arguments as Order;
+        return MaterialPageRoute(
+            builder: (_) => TransactionDetailPage(order: args));
+
+      case manageCoupons:
+        return MaterialPageRoute(builder: (_) => const ManageCouponsPage());
+      case addEditCoupon:
+        return MaterialPageRoute(builder: (_) => const AddEditCouponPage());
 
       // ===== Default (404 Page) =====
       default:

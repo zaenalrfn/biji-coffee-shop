@@ -11,6 +11,8 @@ import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'providers/banner_provider.dart';
 import 'providers/store_provider.dart';
+import 'providers/admin_transaction_provider.dart';
+import 'providers/coupon_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -44,6 +46,8 @@ void main() async {
         ChangeNotifierProvider(create: (_) => OrderProvider()),
         ChangeNotifierProvider(create: (_) => BannerProvider()),
         ChangeNotifierProvider(create: (_) => StoreProvider()),
+        ChangeNotifierProvider(create: (_) => AdminTransactionProvider()),
+        ChangeNotifierProvider(create: (_) => CouponProvider()),
       ],
       child: CoffeeShopApp(initialRoute: initialRoute),
     ),

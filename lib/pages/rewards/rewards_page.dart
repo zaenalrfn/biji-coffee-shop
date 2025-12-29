@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
 import '../../widgets/custom_side_nav.dart';
+import '../../providers/coupon_provider.dart';
 
 class RewardsPage extends StatefulWidget {
   const RewardsPage({super.key});
@@ -11,6 +14,13 @@ class RewardsPage extends StatefulWidget {
 
 class _RewardsPageState extends State<RewardsPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() =>
+        Provider.of<CouponProvider>(context, listen: false).fetchCoupons());
+  }
 
   // Fungsi untuk toggle Drawer (buka/tutup)
   void _toggleDrawer() {
@@ -58,7 +68,8 @@ class _RewardsPageState extends State<RewardsPage> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           IconButton(
-                            icon: const Icon(Icons.arrow_back, color: Colors.white),
+                            icon: const Icon(Icons.arrow_back,
+                                color: Colors.white),
                             onPressed: () => Navigator.pop(context),
                           ),
                           const Text(
@@ -70,14 +81,16 @@ class _RewardsPageState extends State<RewardsPage> {
                             ),
                           ),
                           IconButton(
-                            icon: const Icon(Icons.more_vert, color: Colors.white),
-                            onPressed: _toggleDrawer, // tekan titik tiga untuk buka/tutup drawer
+                            icon: const Icon(Icons.more_vert,
+                                color: Colors.white),
+                            onPressed:
+                                _toggleDrawer, // tekan titik tiga untuk buka/tutup drawer
                           ),
                         ],
                       ),
                     ),
                   ),
-                  
+
                   // Weekly Coffee Challenge Card
                   Padding(
                     padding: const EdgeInsets.all(16.0),
@@ -86,15 +99,15 @@ class _RewardsPageState extends State<RewardsPage> {
                 ],
               ),
             ),
-            
-            // History Reward Section
+
+            // Available Coupons Section Title (Was History Reward)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'History Reward',
+                    'Available Coupons', // Changed from History Reward to reflect data
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -114,23 +127,60 @@ class _RewardsPageState extends State<RewardsPage> {
                 ],
               ),
             ),
-            
-            // History Reward List
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Column(
-                children: [
-                  _RewardHistoryItem(
-                    title: 'Buy 10 Brewed Coffee Packages',
-                    points: 40,
+
+            // Coupon List (Using existing UI style)
+            Consumer<CouponProvider>(
+              builder: (context, provider, _) {
+                if (provider.isLoading) {
+                  return const Center(
+                      child: Padding(
+                    padding: EdgeInsets.all(20.0),
+                    child: CircularProgressIndicator(),
+                  ));
+                }
+                if (provider.coupons.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    child: Text('No coupons available.'),
+                  );
+                }
+
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: ListView.separated(
+                    padding: EdgeInsets.zero,
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: provider.coupons.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final coupon = provider.coupons[index];
+                      // Display logic: Title = Code + Value
+                      final title =
+                          'Code: ${coupon.code} - ${coupon.type == 'percent' ? '${coupon.value}% OFF' : 'Rp ${coupon.value} OFF'}';
+                      final pointsDisplay = coupon.minPurchase.toStringAsFixed(
+                          0); // Display Min Purchase as "Points" equiv?
+                      // Or just show value.
+                      // Let's use Points field to show Value to match design (Right side highlight)
+
+                      return InkWell(
+                        onTap: () {
+                          Clipboard.setData(ClipboardData(text: coupon.code));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('Coupon ${coupon.code} copied!')),
+                          );
+                        },
+                        child: _RewardHistoryItem(
+                          title: title,
+                          points:
+                              'Min: $pointsDisplay', // Converting to String for flexibility
+                        ),
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  _RewardHistoryItem(
-                    title: 'Extra Deluxe Gayo Coffee Packages',
-                    points: 90,
-                  ),
-                ],
-              ),
+                );
+              },
             ),
             const SizedBox(height: 20),
           ],
@@ -163,7 +213,8 @@ class _WeeklyChallengeCard extends StatelessWidget {
                   Positioned(
                     top: 0,
                     left: 40,
-                    child: Icon(Icons.add, color: Colors.white.withOpacity(0.3), size: 16),
+                    child: Icon(Icons.add,
+                        color: Colors.white.withOpacity(0.3), size: 16),
                   ),
                   Positioned(
                     top: 10,
@@ -192,19 +243,20 @@ class _WeeklyChallengeCard extends StatelessWidget {
                     right: 40,
                     child: Icon(Icons.star, color: Colors.yellow, size: 14),
                   ),
-                  
+
                   // Main Gift Box
                   SvgPicture.asset(
                     'assets/images/gift.svg',
                     width: 120,
                     height: 120,
                   ),
-                  
+
                   // Points Badge
                   Positioned(
                     bottom: 0,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
                         color: Colors.orange,
                         borderRadius: BorderRadius.circular(20),
@@ -222,9 +274,9 @@ class _WeeklyChallengeCard extends StatelessWidget {
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // Title
             const Text(
               'Weekly Coffee Challange',
@@ -234,9 +286,9 @@ class _WeeklyChallengeCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
-            
+
             const SizedBox(height: 12),
-            
+
             // Description
             const Text(
               'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et',
@@ -247,9 +299,9 @@ class _WeeklyChallengeCard extends StatelessWidget {
                 height: 1.5,
               ),
             ),
-            
+
             const SizedBox(height: 8),
-            
+
             // Read More Button
             TextButton(
               onPressed: () {},
@@ -262,9 +314,9 @@ class _WeeklyChallengeCard extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // Progress Section
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,7 +379,7 @@ class _WeeklyChallengeCard extends StatelessWidget {
 
 class _RewardHistoryItem extends StatelessWidget {
   final String title;
-  final int points;
+  final String points; // Changed to String to accommodate text
 
   const _RewardHistoryItem({
     required this.title,
@@ -365,7 +417,7 @@ class _RewardHistoryItem extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Text(
-            '$points Pts',
+            points, // Use String directly
             style: const TextStyle(
               fontSize: 16,
               color: Colors.orange,
