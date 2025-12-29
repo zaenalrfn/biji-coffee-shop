@@ -58,6 +58,9 @@ import '../../data/models/order_model.dart';
 // Coupon Management
 import '../../pages/admin/manage_coupons_page.dart';
 import '../../pages/admin/add_edit_coupon_page.dart';
+import '../../pages/orders/my_orders_page.dart';
+import '../../pages/driver/driver_dashboard_page.dart'; // Driver Page
+import '../../pages/admin/manage_orders_page.dart'; // Admin Orders Page
 
 // =========================================================
 
@@ -99,6 +102,8 @@ class AppRoutes {
   static const String checkoutShipping = '/checkout-shipping';
   static const String checkoutCoupon = '/checkout-coupon';
   static const String editProfile = '/edit-profile';
+  static const String myOrders = '/my-orders';
+  static const String driverDashboard = '/driver-dashboard'; // New Route
 
   // Admin
   static const String manageProducts = '/manage-products';
@@ -108,6 +113,8 @@ class AppRoutes {
   static const String manageBanners = '/manage-banners';
   static const String addEditBanner = '/add-edit-banner';
   static const String manageStores = '/manage-stores';
+  static const String manageOrders = '/manage-orders'; // New Route
+
   static const String addEditStore = '/add-edit-store';
 
   static const String manageTransactions = '/manage-transactions';
@@ -171,7 +178,10 @@ class AppRoutes {
 
       // ===== Pelacakan =====
       case deliveryTracker:
-        return MaterialPageRoute(builder: (_) => const DeliveryTrackerPage());
+        return MaterialPageRoute(
+          builder: (_) => const DeliveryTrackerPage(),
+          settings: settings, // IMPORTANT: Pass arguments!
+        );
       case orderReview:
         return MaterialPageRoute(builder: (_) => const OrderReviewPage());
 
@@ -221,6 +231,8 @@ class AppRoutes {
 
       case manageStores:
         return MaterialPageRoute(builder: (_) => const ManageStoresPage());
+      case manageOrders:
+        return MaterialPageRoute(builder: (_) => const ManageOrdersPage());
       case addEditStore:
         final args = settings.arguments as StoreModel?;
         return MaterialPageRoute(builder: (_) => AddEditStorePage(store: args));
@@ -238,18 +250,18 @@ class AppRoutes {
       case addEditCoupon:
         return MaterialPageRoute(builder: (_) => const AddEditCouponPage());
 
+      case myOrders:
+        return MaterialPageRoute(builder: (_) => const MyOrdersPage());
+
       // ===== Default (404 Page) =====
+      case driverDashboard:
+        return MaterialPageRoute(builder: (_) => const DriverDashboardPage());
       default:
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(
-              child: Text(
-                'Page not found',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-              ),
-            ),
-          ),
-        );
+            builder: (_) => Scaffold(
+                  body: Center(
+                      child: Text('No route defined for ${settings.name}')),
+                ));
     }
   }
   // ==========================================================

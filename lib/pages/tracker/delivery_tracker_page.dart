@@ -1,13 +1,15 @@
 // File: lib/pages/tracker/delivery_tracker_page.dart
 // (Versi LENGKAP dengan Tile Provider yang WORK di APK)
 
-import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../core/routes/app_routes.dart';
+import '../../data/models/order_model.dart';
+import '../../data/services/api_service.dart';
+import 'dart:async';
 
 // Model Data untuk Status
 class DeliveryStep {
@@ -35,21 +37,17 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
   late final MapController _mapController;
   late final DraggableScrollableController _sheetController;
 
-  Timer? _timer;
   bool _isSheetFullScreen = false;
 
-  final LatLng _startPoint = const LatLng(-6.175, 106.828);
-  final LatLng _endPoint = const LatLng(-6.200, 106.845);
-
+  final LatLng _startPoint = const LatLng(-6.175, 106.828); // Monas
+  final LatLng _endPoint = const LatLng(-6.200, 106.845); // Menteng
   late LatLng _driverLocation;
 
-  final int _totalRouteSteps = 30;
-  int _currentRouteStep = 0;
-  final Duration _timerTick = const Duration(milliseconds: 1500);
+  Order? _order;
+  Timer? _locationTimer;
+  final ApiService _apiService = ApiService();
 
-  int _currentDeliveryStep = 0;
-  String _estimatedTime = "15-18 men";
-
+  // Steps matching backend status
   final List<DeliveryStep> _deliverySteps = [
     DeliveryStep(
       title: "Pesanan Dikonfirmasi",
@@ -87,14 +85,103 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
   final double _minSheetSize = 0.25;
   final double _maxSheetSize = 0.9;
 
+  bool _isInit = true;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_isInit) {
+      final args = ModalRoute.of(context)?.settings.arguments;
+      debugPrint("📦 Received Arguments: $args (Type: ${args.runtimeType})");
+
+      if (args is Order) {
+        _order = args;
+        _startTracking();
+      } else if (args is Map<String, dynamic>) {
+        // Fallback for Map arguments
+        try {
+          _order = Order.fromJson(args);
+          _startTracking();
+        } catch (e) {
+          debugPrint("❌ Failed to parse Map arguments: $e");
+        }
+      } else {
+        debugPrint("⚠️ Arguments are NOT valid Order object!");
+      }
+
+      // Initialize driver location if available
+      if (_order?.driver != null) {
+        _driverLocation = LatLng(
+            _order!.driver!.currentLat != 0
+                ? _order!.driver!.currentLat
+                : _startPoint.latitude,
+            _order!.driver!.currentLng != 0
+                ? _order!.driver!.currentLng
+                : _startPoint.longitude);
+      }
+      _isInit = false;
+    }
+  }
+
+  void _startTracking() {
+    debugPrint("🏁 Starting Tracking Logic...");
+    // Fetch immediately first!
+    _fetchOrderDetails();
+
+    // Then Poll every 5 seconds for Status & Location
+    _locationTimer?.cancel();
+    _locationTimer = Timer.periodic(const Duration(seconds: 5), (timer) async {
+      await _fetchOrderDetails();
+
+      if (_order?.driverId != null) {
+        try {
+          final data = await _apiService.getDriverLocation(_order!.driverId!);
+          if (mounted) {
+            setState(() {
+              _driverLocation = LatLng((data['current_lat'] as num).toDouble(),
+                  (data['current_lng'] as num).toDouble());
+            });
+            // Optional: Auto-center on driver
+            // _mapController.move(_driverLocation, _mapController.camera.zoom);
+          }
+        } catch (e) {
+          debugPrint("Error fetching driver location: $e");
+        }
+      }
+    });
+  }
+
+  Future<void> _fetchOrderDetails() async {
+    if (_order == null) return;
+    try {
+      debugPrint("Fetching order details for ID: ${_order!.id}...");
+      final updatedOrder = await _apiService.getOrderById(_order!.id);
+      debugPrint("Fetched Order Status: ${updatedOrder.status}");
+      debugPrint("Fetched Driver: ${updatedOrder.driver?.name}");
+
+      if (mounted) {
+        setState(() {
+          _order = updatedOrder;
+          // Also update driver start location if just assigned
+          if (_order?.driver != null && _driverLocation == _startPoint) {
+            _driverLocation =
+                LatLng(_order!.driver!.currentLat, _order!.driver!.currentLng);
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint("Error refreshing order: $e");
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    debugPrint("🚀 DeliveryTrackerPage INIT");
     _mapController = MapController();
     _sheetController = DraggableScrollableController();
-
+    // Default location (Monas), will be updated
     _driverLocation = _startPoint;
-    _estimatedTime = "15-18 men";
 
     _sheetController.addListener(() {
       final isFull = _sheetController.size > (_maxSheetSize - 0.1);
@@ -104,70 +191,55 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
         });
       }
     });
-
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startDeliverySimulation();
-    });
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _locationTimer?.cancel();
     _mapController.dispose();
     _sheetController.dispose();
     super.dispose();
   }
 
-  void _startDeliverySimulation() {
-    _timer = Timer.periodic(_timerTick, (timer) {
-      if (_currentRouteStep >= _totalRouteSteps) {
-        timer.cancel();
-        setState(() {
-          _driverLocation = _endPoint;
-          _currentDeliveryStep = 4;
-          _estimatedTime = "Telah Tiba";
-        });
-        return;
-      }
+  // Map Backend Status to Step Index
+  int _getCurrentStepIndex(String status) {
+    // Normalize status: lowercase and replace spaces with underscores
+    final normalized = status.toLowerCase().replaceAll(' ', '_');
 
-      _currentRouteStep++;
-      double progress = _currentRouteStep / _totalRouteSteps;
+    switch (normalized) {
+      case 'pending':
+        return 0; // Just created
+      case 'confirmed':
+        return 1; // Preparing
+      case 'processing': // Optional extra status
+        return 2; // Driver pickup
+      case 'on_delivery':
+        return 3; // On the way
+      case 'completed':
+        return 4; // Arrived
+      case 'cancelled':
+        return -1;
+      default:
+        // Handle variations
+        if (normalized.contains('delivery')) return 3;
+        if (normalized.contains('complete')) return 4;
+        return 0;
+    }
+  }
 
-      double newLat = _startPoint.latitude +
-          (_endPoint.latitude - _startPoint.latitude) * progress;
-      double newLng = _startPoint.longitude +
-          (_endPoint.longitude - _startPoint.longitude) * progress;
-
-      String newEstimatedTime = _estimatedTime;
-      int newDeliveryStep = _currentDeliveryStep;
-
-      if (_currentRouteStep == _totalRouteSteps - 1) {
-        newEstimatedTime = "< 1 menit";
-        newDeliveryStep = 3;
-      } else if (_currentRouteStep > 25) {
-        newEstimatedTime = "2-3 menit";
-        newDeliveryStep = 3;
-      } else if (_currentRouteStep > 15) {
-        newEstimatedTime = "5-7 menit";
-        newDeliveryStep = 3;
-      } else if (_currentRouteStep > 8) {
-        newEstimatedTime = "10-12 menit";
-        newDeliveryStep = 2;
-      } else if (_currentRouteStep > 2) {
-        newEstimatedTime = "12-15 menit";
-        newDeliveryStep = 1;
-      }
-
-      if (mounted) {
-        setState(() {
-          _driverLocation = LatLng(newLat, newLng);
-          _estimatedTime = newEstimatedTime;
-          _currentDeliveryStep = newDeliveryStep;
-        });
-
-        _mapController.move(_driverLocation, _mapController.camera.zoom);
-      }
-    });
+  String _getEstimatedTime(String status) {
+    switch (status.toLowerCase()) {
+      case 'pending':
+        return "Disiapkan";
+      case 'confirmed':
+        return "15-20 men";
+      case 'on_delivery':
+        return "5-10 men";
+      case 'completed':
+        return "Telah Tiba";
+      default:
+        return "--";
+    }
   }
 
   @override
@@ -210,10 +282,111 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
       actions: [
         IconButton(
           icon: const Icon(Icons.more_vert, color: Colors.black),
-          onPressed: () {},
+          onPressed: () => _showDebugMenu(context),
         ),
       ],
     );
+  }
+
+  void _showDebugMenu(BuildContext context) {
+    showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text("🛠️ Simulation Menu",
+                    style:
+                        TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                const SizedBox(height: 12),
+                if (_order != null) ...[
+                  ListTile(
+                    leading: const Icon(Icons.person_add),
+                    title: const Text("Assign Fake Driver"),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      try {
+                        // Mock Driver ID 1
+                        await _apiService.assignDriver(_order!.id, 1);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content:
+                                    Text("Driver Assigned! Refreshing...")));
+                        setState(
+                            () {}); // Trigger rebuild/fetch if logic implemented
+                      } catch (e) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text("Error: $e")));
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.update),
+                    title: const Text("Set Status: On Delivery"),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      try {
+                        await _apiService.updateOrderStatus(
+                            _order!.id, 'on_delivery');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Status Updated!")));
+                      } catch (e) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text("Error: $e")));
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.check_circle),
+                    title: const Text("Set Status: Completed"),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      try {
+                        await _apiService.updateOrderStatus(
+                            _order!.id, 'completed');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text("Status Completed!")));
+                      } catch (e) {
+                        ScaffoldMessenger.of(context)
+                            .showSnackBar(SnackBar(content: Text("Error: $e")));
+                      }
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.directions_bike),
+                    title: const Text("Teleport Driver (Move)"),
+                    subtitle: const Text("Moves driver 500m"),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (_order?.driverId != null) {
+                        try {
+                          // Simple movement simulation
+                          final newLat = _driverLocation.latitude + 0.001;
+                          final newLng = _driverLocation.longitude + 0.0005;
+                          await _apiService.updateDriverLocation(
+                              _order!.driverId!, newLat, newLng);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                  content: Text("Driver Moved! Wait 10s...")));
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Error: $e")));
+                        }
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text("No Driver Assigned yet!")));
+                      }
+                    },
+                  ),
+                ]
+              ],
+            ),
+          );
+        });
   }
 
   Widget _buildMap() {
@@ -249,8 +422,8 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
         MarkerLayer(
           markers: [
             Marker(
-              width: 250.0,
-              height: 70.0,
+              width: 260.0, // Slightly wider
+              height: 80.0, // Increased height
               point: _driverLocation,
               child: _buildDriverMarker(context),
             ),
@@ -268,6 +441,23 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
   }
 
   Widget _buildDriverMarker(BuildContext context) {
+    // Default data
+    String name = "Mencari Driver...";
+    String id = "";
+    ImageProvider avatar = const AssetImage("assets/images/profile1.jpg");
+
+    if (_order?.driver != null) {
+      name = _order!.driver!.name;
+      id = "ID ${_order!.driver!.id}";
+      if (_order!.driver!.photoUrl != null) {
+        avatar = NetworkImage(_order!.driver!.photoUrl!);
+      }
+    } else if (_order?.driverId != null) {
+      // Fallback if ID exists but full object missing
+      name = "Driver #${_order!.driverId}";
+      id = "Info sedang dimuat...";
+    }
+
     return Card(
       elevation: 5,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(35)),
@@ -275,21 +465,32 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
         padding: const EdgeInsets.all(8.0),
         child: Row(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 25,
-              backgroundImage: AssetImage("assets/images/profile1.jpg"),
+              backgroundImage: avatar,
             ),
             const SizedBox(width: 10),
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Roy Leebauf",
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                ),
-                Text("ID 2445556", style: TextStyle(color: Colors.grey)),
-              ],
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min, // Fix vertical overflow
+                children: [
+                  Text(
+                    name,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 15),
+                    maxLines: 1, // Fix horizontal overflow
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    id,
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
             const Spacer(),
             IconButton(
@@ -444,14 +645,30 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildEstimatedTimeChip(_estimatedTime),
-                const SizedBox(height: 20),
+                // Use dynamic data
+                _buildEstimatedTimeChip(_order != null
+                    ? _getEstimatedTime(_order!.status)
+                    : "Loading..."),
+                const SizedBox(height: 10),
+                Center(
+                  child: TextButton.icon(
+                    onPressed: _fetchOrderDetails,
+                    icon: const Icon(Icons.refresh, size: 16),
+                    label: const Text("Refresh Status"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: Colors.blue,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
                 ...List.generate(_deliverySteps.length, (index) {
                   return _buildStatusStep(
                     step: _deliverySteps[index],
                     index: index,
                     isLastStep: index == _deliverySteps.length - 1,
-                    currentStep: _currentDeliveryStep,
+                    currentStep: _order != null
+                        ? _getCurrentStepIndex(_order!.status)
+                        : 0,
                   );
                 }),
                 const Divider(height: 24, thickness: 1),
