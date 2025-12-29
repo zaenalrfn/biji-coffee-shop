@@ -9,6 +9,7 @@ import '../models/banner_model.dart';
 import '../models/store_model.dart';
 import '../models/cart_item_model.dart';
 import '../models/order_model.dart';
+import '../models/driver_model.dart'; // Add this import
 import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../../core/constants/api_constants.dart';
 import 'auth_service.dart';
@@ -22,6 +23,7 @@ class ApiService {
 
   Future<Map<String, String>> _getHeaders() async {
     final token = await getToken();
+    print('DEBUG: Token for headers: $token'); // Debug Print
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -181,7 +183,8 @@ class ApiService {
           (data is Map && data.containsKey('data')) ? data['data'] : data;
       return list.map((e) => Category.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to load categories');
+      throw Exception(
+          'Failed to load categories: ${response.statusCode} - ${response.body}');
     }
   }
 
@@ -482,7 +485,8 @@ class ApiService {
           (data is Map && data.containsKey('data')) ? data['data'] : data;
       return list.map((e) => Product.fromJson(e)).toList();
     } else {
-      throw Exception('Failed to load products');
+      throw Exception(
+          'Failed to load products: ${response.statusCode} - ${response.body}');
     }
   }
 
@@ -622,6 +626,23 @@ class ApiService {
       return list.map((e) => Order.fromJson(e)).toList();
     } else {
       throw Exception('Failed to load orders');
+    }
+  }
+
+  Future<Order> getOrderById(int id) async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/orders/$id'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final orderData =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return Order.fromJson(orderData);
+    } else {
+      throw Exception('Failed to load order detail');
     }
   }
 
@@ -769,6 +790,100 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to create order: ${response.body}');
+    }
+  }
+
+// --- Driver & Tracker Handlers ---
+  Future<Map<String, dynamic>> getDriverLocation(int driverId) async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/drivers/$driverId/location'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      return json['data'];
+    } else {
+      throw Exception('Failed to get driver location');
+    }
+  }
+
+  Future<List<Driver>> getDrivers() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/drivers'), // Correct endpoint per user
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List data =
+          (json is Map && json.containsKey('data')) ? json['data'] : json;
+      return data.map((e) => Driver.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to get drivers: ${response.statusCode}');
+    }
+  }
+
+  // --- Driver Specific Endpoints ---
+
+  Future<List<Order>> getDriverOrders() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/driver/orders'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final json = jsonDecode(response.body);
+      final List data =
+          (json is Map && json.containsKey('data')) ? json['data'] : json;
+      return data.map((e) => Order.fromJson(e)).toList();
+    } else {
+      throw Exception('Failed to load driver orders: ${response.statusCode}');
+    }
+  }
+
+  Future<void> updateDriverOrderStatus(int orderId, String status) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/driver/orders/$orderId/status'),
+      headers: headers,
+      body: jsonEncode({'status': status}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update status: ${response.body}');
+    }
+  }
+
+  // --- Simulation / Admin Methods ---
+  Future<void> assignDriver(int orderId, int driverId) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/admin/orders/$orderId/assign-driver'),
+      headers: headers,
+      body: jsonEncode({'driver_id': driverId}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to assign driver: ${response.body}');
+    }
+  }
+
+  Future<void> updateDriverLocation(
+      int driverId, double lat, double lng) async {
+    final headers = await _getHeaders();
+    // Using generic update location endpoint if available, or specific driver endpoint
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/drivers/$driverId/location'),
+      headers: headers,
+      body: jsonEncode({'lat': lat, 'lng': lng}),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to update driver location: ${response.body}');
     }
   }
 }

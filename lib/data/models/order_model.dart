@@ -1,5 +1,6 @@
 import 'cart_item_model.dart';
-import 'user_model.dart'; // Import User model
+import 'user_model.dart';
+import 'driver_model.dart';
 
 class Order {
   final int id;
@@ -14,6 +15,8 @@ class Order {
   final String? paymentMethod;
   final String? paymentStatus;
   final Map<String, dynamic>? shippingAddress;
+  final int? driverId;
+  final Driver? driver;
 
   Order({
     required this.id,
@@ -26,6 +29,8 @@ class Order {
     this.paymentMethod,
     this.paymentStatus,
     this.shippingAddress,
+    this.driverId,
+    this.driver,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -52,7 +57,11 @@ class Order {
       paymentStatus: json['payment_status'],
       shippingAddress: json['shipping_address'] is Map<String, dynamic>
           ? json['shipping_address']
-          : null, // Handle if it's string or map
+          : null,
+      driverId: json['driver_id'] is int
+          ? json['driver_id']
+          : int.tryParse(json['driver_id'].toString()),
+      driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null,
     );
   }
 

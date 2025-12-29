@@ -17,6 +17,7 @@ class CustomSideNav extends StatelessWidget {
     // Access user data
     final user = Provider.of<AuthProvider>(context).user;
     final bool isAdmin = user?.roles.contains('admin') ?? false;
+    final bool isDriver = user?.roles.contains('driver') ?? false;
 
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.75,
@@ -109,6 +110,15 @@ class CustomSideNav extends StatelessWidget {
                           padding: const EdgeInsets.only(left: 16.0),
                           child: _buildMenuItem(
                             context,
+                            icon: Icons.list_alt,
+                            title: 'Kelola Pesanan',
+                            route: AppRoutes.manageOrders,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 16.0),
+                          child: _buildMenuItem(
+                            context,
                             icon: Icons.receipt_long_outlined,
                             title: 'Kelola Transaksi',
                             route: AppRoutes.manageTransactions,
@@ -137,6 +147,19 @@ class CustomSideNav extends StatelessWidget {
                     title: 'Shop Cart',
                     route: AppRoutes.cart,
                   ),
+                  _buildMenuItem(
+                    context,
+                    icon: Icons.receipt_long_outlined,
+                    title: 'Pesanan Saya',
+                    route: AppRoutes.myOrders,
+                  ),
+                  if (isDriver)
+                    _buildMenuItem(
+                      context,
+                      icon: Icons.motorcycle_outlined,
+                      title: 'Area Driver',
+                      route: AppRoutes.driverDashboard,
+                    ),
                   _buildMenuItem(
                     context,
                     icon: Icons.favorite_border,
