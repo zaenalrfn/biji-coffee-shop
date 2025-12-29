@@ -4,12 +4,14 @@ class CartItem {
   final int id;
   final int productId;
   final int quantity;
+  final double price; // Snapshot price
   final Product? product;
 
   CartItem({
     required this.id,
     required this.productId,
     required this.quantity,
+    this.price = 0.0,
     this.product,
   });
 
@@ -22,6 +24,11 @@ class CartItem {
       quantity: json['quantity'] is int
           ? json['quantity']
           : int.parse(json['quantity'].toString()),
+      price: json['price'] != null
+          ? (json['price'] is num
+              ? (json['price'] as num).toDouble()
+              : double.tryParse(json['price'].toString()) ?? 0.0)
+          : 0.0,
       product:
           json['product'] != null ? Product.fromJson(json['product']) : null,
     );

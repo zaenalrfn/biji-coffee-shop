@@ -38,7 +38,7 @@ class OrderProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> createOrder() async {
+  Future<String?> createOrder() async {
     _isLoading = true;
     notifyListeners();
     if (_shippingAddress == null) {
@@ -51,14 +51,18 @@ class OrderProvider with ChangeNotifier {
     }
 
     try {
-      await _apiService.createOrder(
+      final response = await _apiService.createOrder(
         shippingAddress: _shippingAddress,
         paymentMethod: _paymentMethod,
       );
+
       await fetchOrders(); // Refresh orders
       // Reset state
       _shippingAddress = null;
       _paymentMethod = null;
+
+      // Return snap_token if available
+      return response['snap_token'];
     } catch (e) {
       print('Error creating order: $e');
       rethrow;

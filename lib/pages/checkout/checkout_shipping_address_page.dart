@@ -61,8 +61,8 @@ class _CheckoutShippingAddressPageState
     Provider.of<OrderProvider>(context, listen: false)
         .setShippingAddress(addressData);
 
-    // Navigate to Payment (Step 1)
-    Navigator.pushNamed(context, AppRoutes.checkoutPayment);
+    // Navigate to Coupon (Step 2)
+    Navigator.pushNamed(context, AppRoutes.checkoutCoupon);
   }
 
   Widget _roundedNextButton() {
