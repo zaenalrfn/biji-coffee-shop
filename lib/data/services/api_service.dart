@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+// import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/user_model.dart';
@@ -90,7 +90,8 @@ class ApiService {
     }
   }
 
-  Future<User> updateProfile(String name, String email, File? imageFile) async {
+  Future<User> updateProfile(
+      String name, String email, XFile? imageFile) async {
     final token = await getToken();
     // Using POST with _method: PUT is standard for Laravel file uploads on update
     var uri = Uri.parse('${ApiConstants.baseUrl}/user');
@@ -109,9 +110,11 @@ class ApiService {
     request.fields['_method'] = 'PUT'; // Method spoofing
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image', // Field name expected by backend
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -259,7 +262,7 @@ class ApiService {
 
   Future<BannerModel> createBanner({
     required String name,
-    File? imageFile,
+    XFile? imageFile,
     String? imageUrl,
   }) async {
     final headers = await _getHeaders();
@@ -274,9 +277,11 @@ class ApiService {
     }
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -296,7 +301,7 @@ class ApiService {
   Future<BannerModel> updateBanner({
     required int id,
     required String name,
-    File? imageFile,
+    XFile? imageFile,
     String? imageUrl,
   }) async {
     final headers = await _getHeaders();
@@ -315,9 +320,11 @@ class ApiService {
     }
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -371,7 +378,7 @@ class ApiService {
     required double longitude,
     required String openTime,
     required String closeTime,
-    File? imageFile,
+    XFile? imageFile,
   }) async {
     final token = await getToken();
     var uri = Uri.parse('${ApiConstants.baseUrl}/stores');
@@ -390,9 +397,11 @@ class ApiService {
     request.fields['close_time'] = closeTime;
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -417,7 +426,7 @@ class ApiService {
     required double longitude,
     required String openTime,
     required String closeTime,
-    File? imageFile,
+    XFile? imageFile,
   }) async {
     final token = await getToken();
     var uri = Uri.parse('${ApiConstants.baseUrl}/stores/$id');
@@ -436,9 +445,11 @@ class ApiService {
     request.fields['close_time'] = closeTime;
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
