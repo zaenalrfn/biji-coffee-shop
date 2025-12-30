@@ -342,6 +342,7 @@ class _ProductsPageState extends State<ProductsPage> {
       'price': product.price,
       'image': product.imageUrl,
       'description': product.description,
+      'subtitle': product.subtitle,
       'category': product.categoryName,
     };
 
@@ -497,7 +498,7 @@ class _ProductsPageState extends State<ProductsPage> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '\$${product.price}',
+                    'Rp ${product.price.toStringAsFixed(0)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 15,

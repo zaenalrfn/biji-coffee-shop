@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+
 import 'forgot_password_page.dart';
 import 'google_login_page.dart';
 
@@ -39,6 +40,24 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(authProvider.errorMessage ?? 'Login failed')),
+        );
+      }
+    }
+  }
+
+  Future<void> _loginGuest() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final success = await authProvider.loginGuest();
+
+    if (success) {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content: Text(authProvider.errorMessage ?? 'Guest login failed')),
         );
       }
     }
@@ -274,10 +293,18 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(width: 28),
-                          Image.network(
-                            "https://upload.wikimedia.org/wikipedia/commons/0/05/Facebook_Logo_(2019).png",
-                            width: 32,
-                            height: 32,
+                          InkWell(
+                            onTap: _loginGuest,
+                            child: Container(
+                              padding: const EdgeInsets.all(
+                                  8), // Add padding for touch area
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: const Icon(Icons.person,
+                                  size: 24, color: Colors.grey),
+                            ),
                           ),
                         ],
                       ),
