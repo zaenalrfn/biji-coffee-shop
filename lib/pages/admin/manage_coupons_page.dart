@@ -14,8 +14,8 @@ class _ManageCouponsPageState extends State<ManageCouponsPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        Provider.of<CouponProvider>(context, listen: false).fetchCoupons());
+    Future.microtask(() => Provider.of<CouponProvider>(context, listen: false)
+        .fetchAdminCoupons());
   }
 
   @override
@@ -40,7 +40,7 @@ class _ManageCouponsPageState extends State<ManageCouponsPage> {
           }
 
           return RefreshIndicator(
-            onRefresh: () => provider.fetchCoupons(),
+            onRefresh: () => provider.fetchAdminCoupons(),
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: provider.coupons.length,

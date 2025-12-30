@@ -16,22 +16,29 @@ class NotificationService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true', // ADD THIS
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
 
   Future<List<NotificationItem>> getNotifications({int page = 1}) async {
     final headers = await _getHeaders();
+    final url = Uri.parse('${ApiConstants.baseUrl}/notifications?page=$page');
+    print('DEBUG: Requesting Notifications from: $url');
+    print('DEBUG: Headers: $headers');
+
     final response = await http.get(
-      Uri.parse('${ApiConstants.baseUrl}/notifications?page=$page'),
+      url,
       headers: headers,
     );
 
+    print('DEBUG: Response Status: ${response.statusCode}');
+    print(
+        'DEBUG: Response Body (Start): ${response.body.substring(0, response.body.length > 500 ? 500 : response.body.length)}');
+
     if (response.statusCode == 200) {
       final jsonResponse = jsonDecode(response.body);
-      // Handle Laravel's simplePaginate response structure
-      // It usually returns { "data": [...], "current_page": 1, ... }
-      // If it returns a list directly, handle that too (fallback)
+      // ...
       final List<dynamic> data =
           jsonResponse is Map && jsonResponse.containsKey('data')
               ? jsonResponse['data']

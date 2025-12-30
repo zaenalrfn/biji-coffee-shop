@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -17,7 +18,7 @@ class AddEditBannerPage extends StatefulWidget {
 class _AddEditBannerPageState extends State<AddEditBannerPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
-  File? _selectedImage;
+  XFile? _selectedImage;
 
   @override
   void initState() {
@@ -37,7 +38,7 @@ class _AddEditBannerPageState extends State<AddEditBannerPage> {
 
     if (pickedFile != null) {
       setState(() {
-        _selectedImage = File(pickedFile.path);
+        _selectedImage = pickedFile;
       });
     }
   }
@@ -91,13 +92,18 @@ class _AddEditBannerPageState extends State<AddEditBannerPage> {
     final provider = Provider.of<BannerProvider>(context);
 
     // Image Preview Logic
-    ImageProvider? imageProvider;
+    Widget? imagePreview;
     if (_selectedImage != null) {
-      imageProvider = FileImage(_selectedImage!);
+      if (kIsWeb) {
+        imagePreview = Image.network(_selectedImage!.path, fit: BoxFit.cover);
+      } else {
+        imagePreview =
+            Image.file(File(_selectedImage!.path), fit: BoxFit.cover);
+      }
     } else if (widget.banner?.imageUrl != null) {
       final url = widget.banner!.imageUrl!;
       if (url.startsWith('http')) {
-        imageProvider = NetworkImage(url);
+        imagePreview = Image.network(url, fit: BoxFit.cover);
       }
     }
 
@@ -131,24 +137,22 @@ class _AddEditBannerPageState extends State<AddEditBannerPage> {
                   decoration: BoxDecoration(
                     color: Colors.grey[200],
                     borderRadius: BorderRadius.circular(12),
-                    image: imageProvider != null
-                        ? DecorationImage(
-                            image: imageProvider, fit: BoxFit.cover)
-                        : null,
+                    // Use child instead of decoration image to handle widget logic easily
                     border: Border.all(color: Colors.grey.shade300),
                   ),
-                  child: imageProvider == null
-                      ? const Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add_photo_alternate,
-                                size: 50, color: Colors.grey),
-                            SizedBox(height: 8),
-                            Text('Tap to select from Gallery',
-                                style: TextStyle(color: Colors.grey)),
-                          ],
-                        )
-                      : null,
+                  clipBehavior:
+                      Clip.hardEdge, // Ensure image stays inside border
+                  child: imagePreview ??
+                      const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_photo_alternate,
+                              size: 50, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text('Tap to select from Gallery',
+                              style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
                 ),
               ),
               const SizedBox(height: 16),

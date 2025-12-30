@@ -6,13 +6,14 @@ class ApiConstants {
   // Gunakan 10.0.2.2 untuk Emulator Android, 127.0.0.1 untuk Emulator iOS / Web / Desktop
   static String get baseUrl {
     if (kIsWeb) {
-      return 'http://127.0.0.1:8000/api';
+      return 'https://0e0676e6af3c.ngrok-free.app/api';
     } else {
       try {
-        return dotenv.env['API_BASE_URL'] ?? 'http://192.168.100.49:8000/api';
+        return dotenv.env['API_BASE_URL'] ??
+            'https://0e0676e6af3c.ngrok-free.app/api';
       } catch (e) {
         // dotenv not initialized
-        return 'http://192.168.100.49:8000/api';
+        return 'https://0e0676e6af3c.ngrok-free.app/api';
       }
     }
   }

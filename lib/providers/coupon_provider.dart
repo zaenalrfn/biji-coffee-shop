@@ -26,7 +26,24 @@ class CouponProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final data = await _apiService.getAdminCoupons();
+      final data = await _apiService.getCoupons(); // Use Public Endpoint
+      _couponModels = data.map((json) => Coupon.fromJson(json)).toList();
+    } catch (e) {
+      _errorMessage = e.toString();
+      _couponModels = [];
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchAdminCoupons() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final data = await _apiService.getAdminCoupons(); // Use Admin Endpoint
       _couponModels = data.map((json) => Coupon.fromJson(json)).toList();
     } catch (e) {
       _errorMessage = e.toString();
@@ -42,7 +59,7 @@ class CouponProvider with ChangeNotifier {
     notifyListeners();
     try {
       await _apiService.createCoupon(coupon.toJson());
-      await fetchCoupons();
+      await fetchAdminCoupons();
     } catch (e) {
       _errorMessage = e.toString();
       rethrow;

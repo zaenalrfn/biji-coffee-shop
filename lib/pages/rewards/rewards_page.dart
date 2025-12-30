@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter/services.dart';
 import '../../widgets/custom_side_nav.dart';
 import '../../providers/coupon_provider.dart';
+import '../../providers/point_provider.dart';
 
 class RewardsPage extends StatefulWidget {
   const RewardsPage({super.key});
@@ -18,8 +19,10 @@ class _RewardsPageState extends State<RewardsPage> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        Provider.of<CouponProvider>(context, listen: false).fetchCoupons());
+    Future.microtask(() {
+      Provider.of<CouponProvider>(context, listen: false).fetchCoupons();
+      Provider.of<PointProvider>(context, listen: false).fetchPoints();
+    });
   }
 
   // Fungsi untuk toggle Drawer (buka/tutup)
@@ -251,24 +254,28 @@ class _WeeklyChallengeCard extends StatelessWidget {
                     height: 120,
                   ),
 
-                  // Points Badge
+                  // Points Badge - Dynamic PBC Points
                   Positioned(
                     bottom: 0,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.orange,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        '80 Pts',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    child: Consumer<PointProvider>(
+                      builder: (context, pointProvider, _) {
+                        return Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${pointProvider.points} PBC',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],

@@ -1,7 +1,9 @@
-import 'dart:io';
+// import 'dart:io'; // Removed for web compatibility
 import 'dart:convert';
 import 'package:flutter/material.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../data/services/api_service.dart';
 import '../data/services/auth_service.dart'; // Add this
 import '../data/models/user_model.dart';
@@ -113,7 +115,8 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> updateProfile(String name, String email, File? imageFile) async {
+  Future<bool> updateProfile(
+      String name, String email, XFile? imageFile) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();

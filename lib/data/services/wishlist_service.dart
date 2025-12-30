@@ -16,6 +16,7 @@ class WishlistService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true', // ADD THIS
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
