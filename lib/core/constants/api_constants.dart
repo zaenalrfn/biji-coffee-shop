@@ -9,10 +9,10 @@ class ApiConstants {
       return 'http://127.0.0.1:8000/api';
     } else {
       try {
-        return dotenv.env['API_BASE_URL'] ?? 'http://192.168.100.49:8000/api';
+        return dotenv.env['API_BASE_URL'] ?? 'http://192.168.18.7:8000/api';
       } catch (e) {
         // dotenv not initialized
-        return 'http://192.168.100.49:8000/api';
+        return 'http://192.168.18.7:8000/api';
       }
     }
   }

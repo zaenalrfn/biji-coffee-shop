@@ -2,7 +2,6 @@
 // (Versi LENGKAP + Chat kirim orderId asli)
 
 import 'dart:async';
-import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -257,8 +256,10 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
         padding: const EdgeInsets.all(8),
         child: Row(
           children: [
-            CircleAvatar(radius: 25, backgroundImage: avatar),
-            const SizedBox(width: 10),
+            CircleAvatar(
+            radius: 25, 
+            backgroundImage: avatar is ImageProvider ? avatar as ImageProvider : AssetImage(avatar.toString()),
+),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
