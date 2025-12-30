@@ -873,36 +873,53 @@ class ApiService {
   }
 
 // --- CHAT (Fitur Pesan) ---
-  Future<List<dynamic>> getChatMessages(int orderId) async {
-    final response = await http.get(
-      Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/messages'),
-      headers: await _getHeaders(),
-    );
-    if (response.statusCode == 200) return jsonDecode(response.body);
-    throw Exception('Failed to load messages');
-  }
+Future<List<Map<String, dynamic>>> getChatMessages(int orderId) async {
+  final headers = await _getHeaders();
+  final response = await http.get(
+    Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/messages'),
+    headers: headers,
+  );
 
-  Future<void> sendChatMessage(int orderId, String message) async {
-    final response = await http.post(
-      Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/messages'),
-      headers: await _getHeaders(),
-      body: jsonEncode({'message': message}),
-    );
-    if (response.statusCode != 201) throw Exception('Failed to send message');
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
+    return data.cast<Map<String, dynamic>>();
+  } else if (response.statusCode == 403) {
+    throw Exception('Tidak memiliki akses ke chat ini');
+  } else {
+    throw Exception('Gagal mengambil pesan: ${response.body}');
   }
-  
-  Future<void> updateDriverLocation(
-      int driverId, double lat, double lng) async {
-    final headers = await _getHeaders();
-    // Using generic update location endpoint if available, or specific driver endpoint
-    final response = await http.post(
-      Uri.parse('${ApiConstants.baseUrl}/drivers/$driverId/location'),
-      headers: headers,
-      body: jsonEncode({'lat': lat, 'lng': lng}),
-    );
+}
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to update driver location: ${response.body}');
-    }
+Future<Map<String, dynamic>> sendChatMessage(
+    int orderId, String message) async {
+  final headers = await _getHeaders();
+  final response = await http.post(
+    Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/messages'),
+    headers: headers,
+    body: jsonEncode({'message': message}),
+  );
+
+  if (response.statusCode == 201) {
+    return jsonDecode(response.body);
+  } else if (response.statusCode == 400) {
+    throw Exception('Chat belum tersedia (driver belum di-assign)');
+  } else {
+    throw Exception('Gagal mengirim pesan: ${response.body}');
   }
+}
+
+Future<List<Map<String, dynamic>>> getChatList() async {
+  final headers = await _getHeaders();
+  final response = await http.get(
+    Uri.parse('${ApiConstants.baseUrl}/chat-list'),
+    headers: headers,
+  );
+
+  if (response.statusCode == 200) {
+    final List data = jsonDecode(response.body);
+    return data.cast<Map<String, dynamic>>();
+  } else {
+    throw Exception('Gagal mengambil daftar chat');
+  }
+}
 }

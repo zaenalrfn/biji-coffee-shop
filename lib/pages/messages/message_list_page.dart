@@ -1,8 +1,6 @@
-// File: lib/pages/messages/message_list_page.dart
-
 import 'package:flutter/material.dart';
 import '../../core/routes/app_routes.dart';
-import '../../data/message_data.dart';
+import '../../data/services/api_service.dart';
 
 class MessageListPage extends StatefulWidget {
   const MessageListPage({super.key});
@@ -12,6 +10,30 @@ class MessageListPage extends StatefulWidget {
 }
 
 class _MessageListPageState extends State<MessageListPage> {
+  final ApiService _apiService = ApiService();
+
+  List<dynamic> _chats = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadChats();
+  }
+
+  Future<void> _loadChats() async {
+    try {
+      final data = await _apiService.getChatList();
+      setState(() {
+        _chats = data;
+        _isLoading = false;
+      });
+    } catch (e) {
+      debugPrint('Error load chats: $e');
+      setState(() => _isLoading = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     const Color appBarColor = Color(0xFF4B3B47);
@@ -19,7 +41,6 @@ class _MessageListPageState extends State<MessageListPage> {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        // ... (AppBar tidak berubah) ...
         backgroundColor: appBarColor,
         elevation: 0,
         leading: IconButton(
@@ -42,12 +63,12 @@ class _MessageListPageState extends State<MessageListPage> {
       ),
       body: Column(
         children: [
-          // Search Bar
+          // Search Bar (belum di-hook, UI saja)
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: TextField(
               decoration: InputDecoration(
-                hintText: 'Find food here...',
+                hintText: 'Find chat here...',
                 hintStyle: TextStyle(color: Colors.grey.shade500),
                 prefixIcon: Icon(Icons.search, color: Colors.grey.shade500),
                 filled: true,
@@ -61,51 +82,58 @@ class _MessageListPageState extends State<MessageListPage> {
             ),
           ),
 
-          // Message List
+          // Chat List
           Expanded(
-            // --- MODIFIKASI: Tambahkan Empty State ---
-            child: messageList.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.message_outlined,
-                            size: 60, color: Colors.grey.shade300),
-                        const SizedBox(height: 16),
-                        const Text(
-                          "Belum Ada Pesan",
-                          style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black54),
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : _chats.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        itemCount: _chats.length,
+                        separatorBuilder: (context, index) => Divider(
+                          height: 1,
+                          indent: 80,
+                          color: Colors.grey.shade200,
                         ),
-                        const SizedBox(height: 4),
-                        const Text(
-                          "Riwayat obrolan Anda akan muncul di sini.",
-                          style: TextStyle(color: Colors.black45),
-                        ),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    itemCount: messageList.length,
-                    separatorBuilder: (context, index) => Divider(
-                      height: 1,
-                      indent: 80,
-                      color: Colors.grey.shade200,
-                    ),
-                    itemBuilder: (context, index) {
-                      final item = messageList[index];
-                      return _buildMessageTile(
-                        context: context,
-                        name: item['name'],
-                        message: item['message'],
-                        time: item['time'],
-                        avatar: item['avatar'],
-                        userId: item['userId'], // <-- Kirim ID unik
-                      );
-                    },
-                  ),
+                        itemBuilder: (context, index) {
+                          final chat = _chats[index];
+                          return _buildMessageTile(
+                            context: context,
+                            name: chat['name'],
+                            message: chat['last_message'] ?? '',
+                            time: chat['time'] ?? '',
+                            avatar: chat['avatar'] ??
+                                'assets/images/profile1.jpg',
+                            orderId: chat['order_id'],
+                          );
+                        },
+                      ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.message_outlined,
+              size: 60, color: Colors.grey.shade300),
+          const SizedBox(height: 16),
+          const Text(
+            "Belum Ada Pesan",
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.black54,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            "Riwayat obrolan Anda akan muncul di sini.",
+            style: TextStyle(color: Colors.black45),
           ),
         ],
       ),
@@ -118,46 +146,29 @@ class _MessageListPageState extends State<MessageListPage> {
     required String message,
     required String time,
     required String avatar,
-    required String userId, // <-- Terima ID unik
+    required int orderId,
   }) {
     return InkWell(
       onTap: () {
-        // --- MODIFIKASI: Kirim 'userId' ---
         Navigator.pushNamed(
           context,
           AppRoutes.chatDetail,
           arguments: {
+            'orderId': orderId, // 
             'name': name,
             'avatar': avatar,
-            'id': userId, // <-- Gunakan ID dari parameter
           },
         );
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
-          // ... (sisa widget tile tidak berubah) ...
           children: [
-            Stack(
-              children: [
-                CircleAvatar(
-                  radius: 28,
-                  backgroundImage: AssetImage(avatar),
-                ),
-                Positioned(
-                  bottom: 2,
-                  right: 2,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: Colors.green,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 1.5),
-                    ),
-                  ),
-                )
-              ],
+            CircleAvatar(
+              radius: 28,
+              backgroundImage: avatar.startsWith('http')
+                  ? NetworkImage(avatar)
+                  : AssetImage(avatar) as ImageProvider,
             ),
             const SizedBox(width: 16),
             Expanded(
