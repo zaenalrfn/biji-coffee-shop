@@ -9,6 +9,9 @@ import 'package:latlong2/latlong.dart';
 import '../../core/routes/app_routes.dart';
 import '../../data/models/order_model.dart';
 import '../../data/services/api_service.dart';
+import '../../providers/point_provider.dart'; // Import PointProvider
+import '../../providers/coupon_provider.dart'; // Import CouponProvider
+import 'package:provider/provider.dart'; // Import Provider
 import 'dart:async';
 
 // Model Data untuk Status
@@ -190,6 +193,12 @@ class _DeliveryTrackerPageState extends State<DeliveryTrackerPage> {
           _isSheetFullScreen = isFull;
         });
       }
+    });
+
+    // Refresh Points and Coupons (since order just finished)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<PointProvider>(context, listen: false).fetchPoints();
+      Provider.of<CouponProvider>(context, listen: false).fetchCoupons();
     });
   }
 

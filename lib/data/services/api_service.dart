@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:io';
+// import 'dart:io';
 import 'package:http/http.dart' as http;
 
 import '../models/user_model.dart';
@@ -27,6 +27,7 @@ class ApiService {
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
+      'ngrok-skip-browser-warning': 'true', // Bypass ngrok warning page
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
@@ -110,7 +111,8 @@ class ApiService {
     }
   }
 
-  Future<User> updateProfile(String name, String email, File? imageFile) async {
+  Future<User> updateProfile(
+      String name, String email, XFile? imageFile) async {
     final token = await getToken();
     // Using POST with _method: PUT is standard for Laravel file uploads on update
     var uri = Uri.parse('${ApiConstants.baseUrl}/user');
@@ -129,9 +131,11 @@ class ApiService {
     request.fields['_method'] = 'PUT'; // Method spoofing
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image', // Field name expected by backend
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -280,7 +284,7 @@ class ApiService {
 
   Future<BannerModel> createBanner({
     required String name,
-    File? imageFile,
+    XFile? imageFile,
     String? imageUrl,
   }) async {
     final headers = await _getHeaders();
@@ -295,9 +299,11 @@ class ApiService {
     }
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -317,7 +323,7 @@ class ApiService {
   Future<BannerModel> updateBanner({
     required int id,
     required String name,
-    File? imageFile,
+    XFile? imageFile,
     String? imageUrl,
   }) async {
     final headers = await _getHeaders();
@@ -336,9 +342,11 @@ class ApiService {
     }
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -392,7 +400,7 @@ class ApiService {
     required double longitude,
     required String openTime,
     required String closeTime,
-    File? imageFile,
+    XFile? imageFile,
   }) async {
     final token = await getToken();
     var uri = Uri.parse('${ApiConstants.baseUrl}/stores');
@@ -411,9 +419,11 @@ class ApiService {
     request.fields['close_time'] = closeTime;
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -438,7 +448,7 @@ class ApiService {
     required double longitude,
     required String openTime,
     required String closeTime,
-    File? imageFile,
+    XFile? imageFile,
   }) async {
     final token = await getToken();
     var uri = Uri.parse('${ApiConstants.baseUrl}/stores/$id');
@@ -457,9 +467,11 @@ class ApiService {
     request.fields['close_time'] = closeTime;
 
     if (imageFile != null) {
-      request.files.add(await http.MultipartFile.fromPath(
+      final bytes = await imageFile.readAsBytes();
+      request.files.add(http.MultipartFile.fromBytes(
         'image',
-        imageFile.path,
+        bytes,
+        filename: imageFile.name,
       ));
     }
 
@@ -719,6 +731,29 @@ class ApiService {
 
   // --- Coupons ---
 
+  // User: Get Coupons (Public/Active)
+  Future<List<dynamic>> getCoupons() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/coupons'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final dynamic data = jsonDecode(response.body);
+      if (data is List) {
+        return data;
+      } else if (data is Map &&
+          data.containsKey('data') &&
+          data['data'] is List) {
+        return (data['data'] as List).toList();
+      }
+      return [];
+    } else {
+      throw Exception('Failed to load coupons');
+    }
+  }
+
   // User: Check Coupon
   Future<Map<String, dynamic>> checkCoupon(
       String code, double totalAmount) async {
@@ -815,7 +850,8 @@ class ApiService {
     }
   }
 
-// --- Driver & Tracker Handlers ---
+  // --- Driver & Tracker Handlers ---
+
   Future<Map<String, dynamic>> getDriverLocation(int driverId) async {
     final headers = await _getHeaders();
     final response = await http.get(
@@ -834,7 +870,7 @@ class ApiService {
   Future<List<Driver>> getDrivers() async {
     final headers = await _getHeaders();
     final response = await http.get(
-      Uri.parse('${ApiConstants.baseUrl}/drivers'), // Correct endpoint per user
+      Uri.parse('${ApiConstants.baseUrl}/drivers'),
       headers: headers,
     );
 
@@ -897,7 +933,6 @@ class ApiService {
   Future<void> updateDriverLocation(
       int driverId, double lat, double lng) async {
     final headers = await _getHeaders();
-    // Using generic update location endpoint if available, or specific driver endpoint
     final response = await http.post(
       Uri.parse('${ApiConstants.baseUrl}/drivers/$driverId/location'),
       headers: headers,
@@ -906,6 +941,45 @@ class ApiService {
 
     if (response.statusCode != 200) {
       throw Exception('Failed to update driver location: ${response.body}');
+    }
+  }
+
+  // ================= POINTS & REWARDS =================
+
+  /// Get user's current PBC points
+  Future<int> getUserPoints() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/points'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      // Handle different possible response formats
+      if (data is Map && data.containsKey('points')) {
+        return data['points'] as int;
+      } else if (data is Map && data.containsKey('data')) {
+        return data['data']['points'] as int;
+      }
+      return 0;
+    } else {
+      throw Exception('Failed to get user points: ${response.body}');
+    }
+  }
+
+  /// Get rewards page data (challenge progress, etc.)
+  Future<Map<String, dynamic>> getRewardsData() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/rewards'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to get rewards data: ${response.body}');
     }
   }
 }

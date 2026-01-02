@@ -44,8 +44,10 @@ class CartProvider with ChangeNotifier {
       // Assuming checkCoupon returns { "discount_amount": 5000 ... }
       final result = await _apiService.checkCoupon(code, subtotal);
 
+      // Parse response: { "message": "...", "data": { "discount_amount": 3000, ... } }
+      final data = result['data'] as Map<String, dynamic>;
       _discountAmount =
-          double.tryParse(result['discount_amount'].toString()) ?? 0.0;
+          double.tryParse(data['discount_amount'].toString()) ?? 0.0;
       _appliedCouponCode = code;
     } catch (e) {
       _discountAmount = 0;

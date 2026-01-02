@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/point_provider.dart';
 import '../../widgets/custom_side_nav.dart';
 import '../../data/models/wishlist_item_model.dart';
 import '../../data/services/wishlist_service.dart';
@@ -22,6 +23,9 @@ class _ProfilePageState extends State<ProfilePage> {
   void initState() {
     super.initState();
     _fetchWishlist();
+    // Fetch user points
+    Future.microtask(
+        () => Provider.of<PointProvider>(context, listen: false).fetchPoints());
   }
 
   Future<void> _fetchWishlist() async {
@@ -151,31 +155,35 @@ class _ProfilePageState extends State<ProfilePage> {
                                   ),
                           ),
                         ),
-                        // Badge Poin
+                        // Badge Poin - Dynamic PBC Points
                         Positioned(
                           bottom: -2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 4, horizontal: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
-                                  blurRadius: 4,
-                                  offset: const Offset(0, 2),
+                          child: Consumer<PointProvider>(
+                            builder: (context, pointProvider, _) {
+                              return Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 4, horizontal: 12),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: const Text(
-                              '456 Pts',
-                              style: TextStyle(
-                                color: Color(0xFF6E4C77),
-                                fontSize: 14,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                                child: Text(
+                                  '${pointProvider.points} PBC',
+                                  style: const TextStyle(
+                                    color: Color(0xFF6E4C77),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              );
+                            },
                           ),
                         ),
                       ],

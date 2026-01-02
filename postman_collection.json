@@ -1992,11 +1992,34 @@
                 }
             ]
         },
+        {},
         {
-            "name": "11. Admin Coupons",
+            "name": "11. Coupons (Admin & User)",
             "item": [
                 {
-                    "name": "List Coupons",
+                    "name": "List Available Coupons (User)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "coupons"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin - List Coupons",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -2019,7 +2042,7 @@
                     }
                 },
                 {
-                    "name": "Create Coupon",
+                    "name": "Admin - Create Coupon",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -2051,7 +2074,7 @@
                     }
                 },
                 {
-                    "name": "Delete Coupon",
+                    "name": "Admin - Delete Coupon",
                     "request": {
                         "method": "DELETE",
                         "header": [
@@ -2070,6 +2093,55 @@
                                 "admin",
                                 "coupons",
                                 "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "12. Membership (Points & Rewards)",
+            "item": [
+                {
+                    "name": "Get My Points",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/points",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "points"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Rewards",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rewards",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rewards"
                             ]
                         }
                     }

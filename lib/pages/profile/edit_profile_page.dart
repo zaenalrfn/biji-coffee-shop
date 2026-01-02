@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -23,7 +24,7 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   late TextEditingController _nameController;
   late TextEditingController _emailController;
-  File? _selectedImage;
+  XFile? _selectedImage;
   final ImagePicker _picker = ImagePicker();
 
   @override
@@ -37,7 +38,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     if (image != null) {
       setState(() {
-        _selectedImage = File(image.path);
+        _selectedImage = image;
       });
     }
   }
@@ -86,7 +87,11 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       ),
                       child: ClipOval(
                         child: _selectedImage != null
-                            ? Image.file(_selectedImage!, fit: BoxFit.cover)
+                            ? (kIsWeb
+                                ? Image.network(_selectedImage!.path,
+                                    fit: BoxFit.cover)
+                                : Image.file(File(_selectedImage!.path),
+                                    fit: BoxFit.cover))
                             : (widget.initialPhotoUrl != null
                                 ? Image.network(
                                     widget.initialPhotoUrl!,

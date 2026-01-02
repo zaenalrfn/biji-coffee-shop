@@ -20,6 +20,7 @@ class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
   @override
   void initState() {
     super.initState();
+    // Auto-select Midtrans as the default payment method
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<OrderProvider>(context, listen: false)
           .setPaymentMethod('midtrans');
