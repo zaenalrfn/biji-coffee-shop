@@ -101,7 +101,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                   title: Text(item.product?.name ?? 'Unknown Product'),
                   subtitle: Text('Qty: ${item.quantity}'),
                   trailing: Text(
-                      '\$${(item.price * item.quantity).toStringAsFixed(2)}'),
+                      'Rp ${(item.price * item.quantity).toStringAsFixed(0)}'),
                 );
               },
             ),
@@ -114,7 +114,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                   const Text('Total Price',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('\$${widget.order.totalPrice.toStringAsFixed(2)}',
+                  Text('Rp ${widget.order.totalPrice.toStringAsFixed(0)}',
                       style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

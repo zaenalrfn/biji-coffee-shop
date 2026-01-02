@@ -77,6 +77,7 @@ class FeaturedBeveragesSection extends StatelessWidget {
                         'price': product.price,
                         'image': product.imageUrl,
                         'description': product.description,
+                        'subtitle': product.subtitle,
                         'category': product.categoryName,
                       };
 
@@ -188,7 +189,7 @@ class FeaturedBeveragesSection extends StatelessWidget {
                                           Row(
                                             children: [
                                               Text(
-                                                '\$${product.price}',
+                                                'Rp ${product.price.toStringAsFixed(0)}',
                                                 style: const TextStyle(
                                                   color: Color(
                                                       0xFF3E2B47), // Dark Price
