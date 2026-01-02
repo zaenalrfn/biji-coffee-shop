@@ -4,6 +4,7 @@ import 'widgets/header_section.dart';
 import 'widgets/promotion_section.dart';
 import 'widgets/category_section.dart';
 import 'widgets/featured_beverages_section.dart';
+import '../../widgets/custom_side_nav.dart';
 
 import 'package:provider/provider.dart';
 import '../../providers/product_provider.dart';
@@ -35,6 +36,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: const CustomSideNav(),
       bottomNavigationBar: CustomBottomNav(
         currentIndex: 0,
         onTap: (index) {

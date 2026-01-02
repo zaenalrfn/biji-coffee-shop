@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../core/constants/api_constants.dart';
 import '../models/notification_model.dart';
 
+import '../services/auth_service.dart';
+
 class NotificationService {
   Future<String?> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('access_token');
+    return await AuthService().getToken();
   }
 
   Future<Map<String, String>> _getHeaders() async {

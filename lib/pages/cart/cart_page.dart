@@ -24,6 +24,8 @@ class _CartPageState extends State<CartPage>
   late PageController _pageController;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
+  String _searchQuery = "";
+
   @override
   void initState() {
     super.initState();
@@ -129,7 +131,7 @@ class _CartPageState extends State<CartPage>
 
       body: Column(
         children: [
-          // ... (Search Bar - keep existing)
+          // ... (Search Bar - updated logic)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 8),
             child: Container(
@@ -139,8 +141,13 @@ class _CartPageState extends State<CartPage>
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(color: Colors.grey.shade300),
               ),
-              child: const TextField(
-                decoration: InputDecoration(
+              child: TextField(
+                onChanged: (val) {
+                  setState(() {
+                    _searchQuery = val.toLowerCase();
+                  });
+                },
+                decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search, color: Color(0xFF9E9E9E)),
                   hintText: "Search Order ID or Product",
                   hintStyle: TextStyle(color: Color(0xFFBDBDBD)),
@@ -189,15 +196,25 @@ class _CartPageState extends State<CartPage>
               children: [
                 // 1. Cart Tab
                 Consumer<CartProvider>(builder: (context, cart, child) {
-                  if (cart.isLoading)
+                  if (cart.isLoading) {
                     return const Center(child: CircularProgressIndicator());
-                  return _buildCartList(cart.cartItems);
+                  }
+
+                  // Filter Cart Items
+                  final filteredCart = cart.cartItems.where((item) {
+                    if (_searchQuery.isEmpty) return true;
+                    final name = item.product?.name.toLowerCase() ?? '';
+                    return name.contains(_searchQuery);
+                  }).toList();
+
+                  return _buildCartList(filteredCart);
                 }),
 
                 // 2. Delivery Tab (Pending/Paid/Shipped)
                 Consumer<OrderProvider>(builder: (context, orderArgs, child) {
-                  if (orderArgs.isLoading)
+                  if (orderArgs.isLoading) {
                     return const Center(child: CircularProgressIndicator());
+                  }
 
                   // Filter active orders
                   final activeOrders = orderArgs.orders
@@ -206,21 +223,42 @@ class _CartPageState extends State<CartPage>
                           o.status == 'paid' ||
                           o.status == 'shipped' ||
                           o.status == 'processing')
-                      .toList();
+                      .where((o) {
+                    if (_searchQuery.isEmpty) return true;
+                    final idMatch =
+                        o.orderNumber.toLowerCase().contains(_searchQuery) ||
+                            o.id.toString().contains(_searchQuery);
+                    final itemMatch = o.items?.any((i) => i.product!.name
+                            .toLowerCase()
+                            .contains(_searchQuery)) ??
+                        false;
+                    return idMatch || itemMatch;
+                  }).toList();
 
                   return _buildOrderList(activeOrders);
                 }),
 
                 // 3. Done Tab (Completed/Cancelled)
                 Consumer<OrderProvider>(builder: (context, orderArgs, child) {
-                  if (orderArgs.isLoading)
+                  if (orderArgs.isLoading) {
                     return const Center(child: CircularProgressIndicator());
+                  }
 
                   // Filter completed orders
                   final completedOrders = orderArgs.orders
                       .where((o) =>
                           o.status == 'completed' || o.status == 'cancelled')
-                      .toList();
+                      .where((o) {
+                    if (_searchQuery.isEmpty) return true;
+                    final idMatch =
+                        o.orderNumber.toLowerCase().contains(_searchQuery) ||
+                            o.id.toString().contains(_searchQuery);
+                    final itemMatch = o.items?.any((i) => i.product!.name
+                            .toLowerCase()
+                            .contains(_searchQuery)) ??
+                        false;
+                    return idMatch || itemMatch;
+                  }).toList();
 
                   return _buildOrderList(completedOrders);
                 }),

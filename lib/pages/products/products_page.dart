@@ -19,6 +19,8 @@ class _ProductsPageState extends State<ProductsPage> {
   final TextEditingController _searchController = TextEditingController();
   late String selectedCategory;
   String searchQuery = '';
+  String _sortOption =
+      'default'; // 'name_asc', 'name_desc', 'price_asc', 'price_desc'
 
   @override
   void initState() {
@@ -124,6 +126,19 @@ class _ProductsPageState extends State<ProductsPage> {
           return matchesSearch && matchesCategory;
         }).toList();
 
+        // Sorting Logic
+        if (_sortOption == 'name_asc') {
+          filteredProducts.sort(
+              (a, b) => a.name.toLowerCase().compareTo(b.name.toLowerCase()));
+        } else if (_sortOption == 'name_desc') {
+          filteredProducts.sort(
+              (a, b) => b.name.toLowerCase().compareTo(a.name.toLowerCase()));
+        } else if (_sortOption == 'price_asc') {
+          filteredProducts.sort((a, b) => a.price.compareTo(b.price));
+        } else if (_sortOption == 'price_desc') {
+          filteredProducts.sort((a, b) => b.price.compareTo(a.price));
+        }
+
         return SingleChildScrollView(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -174,17 +189,45 @@ class _ProductsPageState extends State<ProductsPage> {
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF5F5F5),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.tune,
-                        color: Color(0xFF424242),
-                        size: 24,
+                    const SizedBox(width: 12),
+                    PopupMenuButton<String>(
+                      onSelected: (value) {
+                        setState(() {
+                          _sortOption = value;
+                        });
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'name_asc',
+                          child: Text("Nama (A-Z)"),
+                        ),
+                        const PopupMenuItem(
+                          value: 'name_desc',
+                          child: Text("Nama (Z-A)"),
+                        ),
+                        const PopupMenuItem(
+                          value: 'price_asc',
+                          child: Text("Harga Terendah"),
+                        ),
+                        const PopupMenuItem(
+                          value: 'price_desc',
+                          child: Text("Harga Tertinggi"),
+                        ),
+                      ],
+                      child: Container(
+                        width: 60,
+                        height: 60,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF5F5F5),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.sort,
+                          color: _sortOption != 'default'
+                              ? Colors.orange
+                              : const Color(0xFF424242),
+                          size: 24,
+                        ),
                       ),
                     ),
                   ],

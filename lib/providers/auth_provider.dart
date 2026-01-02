@@ -1,11 +1,13 @@
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import '../data/services/api_service.dart';
+import '../data/services/auth_service.dart'; // Add this
 import '../data/models/user_model.dart';
 import '../core/constants/api_constants.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -60,8 +62,7 @@ class AuthProvider with ChangeNotifier {
     try {
       final response = await _apiService.login(email, password);
       final token = response['access_token'];
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('access_token', token);
+      await AuthService().saveToken(token); // Use AuthService
 
       if (response.containsKey('user')) {
         _user = User.fromJson(response['user']);
@@ -156,8 +157,7 @@ class AuthProvider with ChangeNotifier {
 
       if (response.containsKey('access_token')) {
         final token = response['access_token'];
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('access_token', token);
+        await AuthService().saveToken(token);
 
         final fetchedUser = await _apiService.getUser();
         _user = fetchedUser;
@@ -207,8 +207,9 @@ class AuthProvider with ChangeNotifier {
       debugPrint("Logout error: $e");
     }
 
+    // Clear token using AuthService
+    await AuthService().deleteToken();
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('access_token');
     await prefs.remove('user_data'); // Clear cache
 
     _user = null;
