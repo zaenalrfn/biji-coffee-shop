@@ -51,10 +51,10 @@ class OrderProvider with ChangeNotifier {
     }
 
     try {
-      final response = await _apiService.createOrder(
-        shippingAddress: _shippingAddress,
-        paymentMethod: _paymentMethod,
-      );
+      final order = await _apiService.createOrder({
+        'shipping_address': _shippingAddress,
+        'payment_method': _paymentMethod,
+      });
 
       await fetchOrders(); // Refresh orders
       // Reset state
@@ -62,7 +62,7 @@ class OrderProvider with ChangeNotifier {
       _paymentMethod = null;
 
       // Return snap_token if available
-      return response['snap_token'];
+      return order.snapToken;
     } catch (e) {
       print('Error creating order: $e');
       rethrow;

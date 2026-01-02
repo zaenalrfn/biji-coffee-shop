@@ -2,18 +2,19 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiConstants {
-  // Ganti dengan IP lokal laptop jika pakai device fisik, misal 192.168.1.x
-  // Gunakan 10.0.2.2 untuk Emulator Android, 127.0.0.1 untuk Emulator iOS / Web / Desktop
+  // 1. GANTI IP LAPTOP DISINI (Jadikan Default)
+  static const String serverIp = '192.168.18.7'; // Update sesuai request user
+
   static String get baseUrl {
     if (kIsWeb) {
-      return 'https://0e0676e6af3c.ngrok-free.app/api';
+      return 'https://e1f950e671d2.ngrok-free.app/api';
     } else {
       try {
         return dotenv.env['API_BASE_URL'] ??
-            'https://0e0676e6af3c.ngrok-free.app/api';
+            'https://e1f950e671d2.ngrok-free.app/api';
       } catch (e) {
         // dotenv not initialized
-        return 'https://0e0676e6af3c.ngrok-free.app/api';
+        return 'https://e1f950e671d2.ngrok-free.app/api';
       }
     }
   }
