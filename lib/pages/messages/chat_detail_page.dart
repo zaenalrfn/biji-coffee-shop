@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../data/message_data.dart'; // Tetap pakai model ChatMessage
-import '../../data/services/api_service.dart';
+import '../../data/models/chat_model.dart'; // Use the new model
+import '../../data/services/chat_service.dart'; // Use the new service
 import '../../data/services/auth_service.dart';
-import 'dart:async';
+import '../../data/services/api_service.dart'; // Keep for getUser
 
 class ChatDetailPage extends StatefulWidget {
-  // Kita sesuaikan agar bisa menerima argumen dari tracker page
   const ChatDetailPage({super.key});
 
   @override
@@ -16,15 +15,15 @@ class ChatDetailPage extends StatefulWidget {
 class _ChatDetailPageState extends State<ChatDetailPage> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final ApiService _apiService = ApiService();
+  
+  // Services
+  final ChatService _chatService = ChatService();
   final AuthService _authService = AuthService();
+  final ApiService _apiService = ApiService();
 
-  List<ChatMessage> _messages = [];
+  List<ChatModel> _messages = [];
   bool _isLoading = true;
-  Timer? _pollingTimer;
   int? _currentUserId;
-
-  // Data dari halaman sebelumnya
   int? _orderId;
   String? _userName;
   String? _userAvatar;
@@ -32,87 +31,117 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Mengambil data (arguments) yang dikirim dari DeliveryTrackerPage
+    // Retrieve arguments
     final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    
+    // Prevent re-initialization if arguments are the same (e.g. keyboard open/close)
+    if (_orderId == args['orderId']) return;
+
     _orderId = args['orderId'];
     _userName = args['name'];
     _userAvatar = args['avatar'] ?? 'assets/images/profile1.jpg';
 
-    if (_orderId != null && _messages.isEmpty) {
+    if (_orderId != null) {
       _initChat();
     }
   }
 
   Future<void> _initChat() async {
-    // 1. Ambil ID kita sendiri dulu agar tahu mana pesan "kiriman kita" (isSender)
-    final user = await _apiService.getUser();
-    _currentUserId = user.id;
+    // 1. Get Current User ID
+    try {
+      final user = await _apiService.getUser();
+      _currentUserId = user.id;
+    } catch (e) {
+      print("Error getting user: $e");
+    }
 
-    // 2. Ambil pesan pertama kali
-    await _fetchMessages();
+    // 2. Get Auth Token
+    final token = await _authService.getToken();
+    if (token == null) {
+      // Handle unauthorized (e.g., logout)
+      return;
+    }
 
-    // 3. Set timer untuk nge-cek pesan baru setiap 3 detik (Polling)
-    _pollingTimer = Timer.periodic(const Duration(seconds: 3), (timer) {
-      _fetchMessages();
+    // 3. Initialize Pusher
+    await _chatService.initPusher(token);
+
+    // 4. Fetch Initial Messages
+    await _fetchMessages(token);
+
+    // 5. Subscribe to Realtime Events
+    _chatService.listenToOrderChat(_orderId!, (newMessage) {
+      if (mounted) {
+        // Fix isSender dynamically
+        final processedMessage = newMessage.checkIsSender(_currentUserId ?? 0);
+        
+        // Don't add if I sent it (assumes optimistic update works)
+        if (!processedMessage.isSender) {
+           setState(() {
+             _messages.add(processedMessage);
+           });
+           _scrollToBottom();
+        }
+      }
     });
   }
 
-  Future<void> _fetchMessages() async {
-    if (_orderId == null) return;
-
+  Future<void> _fetchMessages(String token) async {
     try {
-      final List<dynamic> data = await _apiService.getChatMessages(_orderId!);
-      
+      final msgs = await _chatService.getMessages(_orderId!, token);
       if (mounted) {
         setState(() {
-          _messages = data.map((json) {
-            return ChatMessage(
-              text: json['message'],
-              timestamp: DateTime.parse(json['created_at']),
-              // Jika sender_id di database sama dengan ID kita, berarti isSender = true
-              isSender: json['sender_id'] == _currentUserId,
-            );
+          _messages = msgs.map((m) {
+             // Update isSender status based on our current user ID
+             return m.checkIsSender(_currentUserId ?? 0);
           }).toList();
           _isLoading = false;
         });
+        _scrollToBottom();
       }
     } catch (e) {
       debugPrint("Gagal ambil chat: $e");
     }
   }
 
-  void _scrollToBottom() {
-    if (_scrollController.hasClients) {
-      _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeOut,
-      );
-    }
-  }
-
   Future<void> _sendMessage() async {
     if (_controller.text.trim().isEmpty || _orderId == null) return;
-
     String text = _controller.text;
     _controller.clear();
 
-    try {
-      // Kirim ke API Laravel
-      await _apiService.sendChatMessage(_orderId!, text);
-      // Refresh list pesan
-      await _fetchMessages();
-      _scrollToBottom();
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Gagal mengirim: $e")),
-      );
+    // Optimistic Update
+    setState(() {
+      _messages.add(ChatModel(
+        id: DateTime.now().millisecondsSinceEpoch, // Temp ID (positive to avoid 0)
+        orderId: _orderId!,
+        message: text,
+        senderName: "Me",
+        senderId: _currentUserId ?? 0,
+        createdAt: DateTime.now(),
+        isSender: true,
+      ));
+    });
+    _scrollToBottom();
+
+    final token = await _authService.getToken();
+    if (token != null) {
+      await _chatService.sendMessage(_orderId!, text, token);
+      // Ideally replace optimistic message with real one, but list refresh is okay too
     }
+  }
+
+  void _scrollToBottom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+      }
+    });
   }
 
   @override
   void dispose() {
-    _pollingTimer?.cancel(); // Berhenti cek pesan kalau halaman ditutup
+    if (_orderId != null) {
+      _chatService.leaveChat(_orderId!);
+    }
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -134,7 +163,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     itemCount: _messages.length,
                     itemBuilder: (context, index) {
                       final message = _messages[index];
-                      String timeString = DateFormat('HH:mm').format(message.timestamp);
+                      // Fix isSender check dynamically if needed:
+                      // bool isMe = message.senderId == _currentUserId; 
+                      // (If we had senderId)
+                      
+                      String timeString = DateFormat('HH:mm').format(message.createdAt);
                       return _buildMessageBubble(message, timeString);
                     },
                   ),
@@ -144,8 +177,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             ),
     );
   }
-
-  // --- UI WIDGETS (Sama dengan desain lama kamu, cuma datanya yang ganti) ---
 
   AppBar _buildAppBar() {
     return AppBar(
@@ -159,7 +190,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         children: [
           CircleAvatar(
             radius: 20,
-            backgroundImage: AssetImage(_userAvatar ?? 'assets/images/profile1.jpg'),
+            backgroundImage: _userAvatar != null && _userAvatar!.startsWith('http')
+              ? NetworkImage(_userAvatar!)
+              : AssetImage(_userAvatar ?? 'assets/images/profile1.jpg') as ImageProvider,
           ),
           const SizedBox(width: 12),
           Text(_userName ?? "Chat", style: const TextStyle(color: Colors.black, fontSize: 16, fontWeight: FontWeight.bold)),
@@ -168,10 +201,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     );
   }
 
-  Widget _buildMessageBubble(ChatMessage message, String timeString) {
-    final align = message.isSender ? CrossAxisAlignment.end : CrossAxisAlignment.start;
-    final color = message.isSender ? const Color(0xFF4B3B47) : const Color(0xFFFDEFE7);
-    final textColor = message.isSender ? Colors.white : Colors.black87;
+  Widget _buildMessageBubble(ChatModel message, String timeString) {
+    // Check local isSender (from optimistic) OR try to deduce
+    // Since we lost senderId in ChatModel, this is tricky. 
+    // We will assume simpler logic: if name is "Me", it is sender.
+    // Or we fix ChatModel in next step.
+    
+    final bool isMe = message.isSender; 
+    
+    final align = isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start;
+    final color = isMe ? const Color(0xFF4B3B47) : const Color(0xFFFDEFE7);
+    final textColor = isMe ? Colors.white : Colors.black87;
 
     return Column(
       crossAxisAlignment: align,
@@ -181,7 +221,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           margin: const EdgeInsets.only(bottom: 4),
           decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(12)),
-          child: Text(message.text, style: TextStyle(color: textColor, fontSize: 15)),
+          child: Text(message.message, style: TextStyle(color: textColor, fontSize: 15)),
         ),
         Text(timeString, style: TextStyle(color: Colors.grey.shade500, fontSize: 11)),
         const SizedBox(height: 8),

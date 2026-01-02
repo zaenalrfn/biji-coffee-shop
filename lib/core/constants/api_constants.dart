@@ -2,17 +2,19 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter/foundation.dart';
 
 class ApiConstants {
-  // Ganti dengan IP lokal laptop jika pakai device fisik, misal 192.168.1.x
-  // Gunakan 10.0.2.2 untuk Emulator Android, 127.0.0.1 untuk Emulator iOS / Web / Desktop
+  // 1. GANTI IP LAPTOP DISINI (Jadikan Default)
+  static const String serverIp = '192.168.18.7'; // Update sesuai request user
+
   static String get baseUrl {
     if (kIsWeb) {
       return 'http://127.0.0.1:8000/api';
     } else {
       try {
-        return dotenv.env['API_BASE_URL'] ?? 'http://192.168.18.7:8000/api';
+        // Prioritas: .env -> Code diatas
+        final ip = dotenv.env['SERVER_IP'] ?? serverIp; 
+        return 'http://$ip:8000/api';
       } catch (e) {
-        // dotenv not initialized
-        return 'http://192.168.18.7:8000/api';
+        return 'http://$serverIp:8000/api';
       }
     }
   }
