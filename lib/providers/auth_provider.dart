@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../data/services/api_service.dart';
 import '../data/services/auth_service.dart'; // Add this
 import '../data/models/user_model.dart';
+import '../core/constants/api_constants.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -35,7 +36,6 @@ class AuthProvider with ChangeNotifier {
       } catch (e) {
         debugPrint('CheckLoginStatus error: $e');
         // Only logout if explicitly unauthenticated (401)
-        // Adjust string check based on your specific 401 exception message
         if (e.toString().contains('Unauthenticated') ||
             e.toString().contains('401')) {
           await logout();
@@ -99,8 +99,6 @@ class AuthProvider with ChangeNotifier {
         await prefs.setString('access_token', token);
 
         // Try to get user data from response or fetch it
-        // If it's a guest, maybe backend returns a specific structure or we fetch /user which returns guest info
-        // For robustness, let's assume we fetch /user or fallback
         try {
           if (response.containsKey('user')) {
             _user = User.fromJson(response['user']);
@@ -133,6 +131,19 @@ class AuthProvider with ChangeNotifier {
       _errorMessage = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<void> loginWithGoogle() async {
+    final url = Uri.parse(ApiConstants.googleAuthEndpoint);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      _errorMessage = 'Could not launch Google Login';
+      notifyListeners();
     }
   }
 

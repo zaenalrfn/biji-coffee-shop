@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
-
 import 'forgot_password_page.dart';
 import 'google_login_page.dart';
 
@@ -45,6 +44,7 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  // Added back Guest Login
   Future<void> _loginGuest() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final success = await authProvider.loginGuest();
@@ -293,6 +293,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                           const SizedBox(width: 28),
+                          // Facebook replaced with Guest Login
                           InkWell(
                             onTap: _loginGuest,
                             child: Container(
