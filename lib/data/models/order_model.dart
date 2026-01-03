@@ -18,6 +18,8 @@ class Order {
   final int? driverId;
   final Driver? driver;
 
+  final String? snapToken;
+
   Order({
     required this.id,
     required this.orderNumber,
@@ -31,6 +33,7 @@ class Order {
     this.shippingAddress,
     this.driverId,
     this.driver,
+    this.snapToken,
   });
 
   factory Order.fromJson(Map<String, dynamic> json) {
@@ -42,13 +45,19 @@ class Order {
     }
 
     return Order(
-      id: json['id'] is int ? json['id'] : int.parse(json['id'].toString()),
+      id: (json['id'] != null)
+          ? (json['id'] is int
+              ? json['id']
+              : int.tryParse(json['id'].toString()) ?? 0)
+          : 0,
       orderNumber: json['transaction_id'] ??
           json['order_number'] ??
           '', // Handle both keys
-      totalPrice: json['total_price'] is num
-          ? (json['total_price'] as num).toDouble()
-          : double.tryParse(json['total_price'].toString()) ?? 0.0,
+      totalPrice: (json['total_price'] != null)
+          ? (json['total_price'] is num
+              ? (json['total_price'] as num).toDouble()
+              : double.tryParse(json['total_price'].toString()) ?? 0.0)
+          : 0.0,
       status: json['status'] ?? 'pending',
       createdAt: json['created_at'] ?? '',
       items: itemsList,
@@ -58,10 +67,13 @@ class Order {
       shippingAddress: json['shipping_address'] is Map<String, dynamic>
           ? json['shipping_address']
           : null,
-      driverId: json['driver_id'] is int
-          ? json['driver_id']
-          : int.tryParse(json['driver_id'].toString()),
+      driverId: (json['driver_id'] != null)
+          ? (json['driver_id'] is int
+              ? json['driver_id']
+              : int.tryParse(json['driver_id'].toString()))
+          : null,
       driver: json['driver'] != null ? Driver.fromJson(json['driver']) : null,
+      snapToken: json['snap_token'],
     );
   }
 
@@ -76,6 +88,7 @@ class Order {
     String? paymentMethod,
     String? paymentStatus,
     Map<String, dynamic>? shippingAddress,
+    String? snapToken,
   }) {
     return Order(
       id: id ?? this.id,
@@ -88,6 +101,7 @@ class Order {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       paymentStatus: paymentStatus ?? this.paymentStatus,
       shippingAddress: shippingAddress ?? this.shippingAddress,
+      snapToken: snapToken ?? this.snapToken,
     );
   }
 }

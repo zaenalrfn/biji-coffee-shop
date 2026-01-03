@@ -10,6 +10,8 @@ import '../models/store_model.dart';
 import '../models/cart_item_model.dart';
 import '../models/order_model.dart';
 import '../models/driver_model.dart'; // Add this import
+import '../models/chat_order_model.dart';
+import '../models/chat_message_model.dart';
 import 'package:image_picker/image_picker.dart'; // Import XFile
 import '../../core/constants/api_constants.dart';
 import 'auth_service.dart';
@@ -828,31 +830,8 @@ class ApiService {
       headers: headers,
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode != 200 && response.statusCode != 204) {
       throw Exception('Failed to delete coupon: ${response.body}');
-    }
-  }
-
-  Future<Map<String, dynamic>> createOrder({
-    Map<String, dynamic>? shippingAddress,
-    String? paymentMethod,
-  }) async {
-    final headers = await _getHeaders();
-    final body = jsonEncode({
-      if (shippingAddress != null) 'shipping_address': shippingAddress,
-      if (paymentMethod != null) 'payment_method': paymentMethod,
-    });
-
-    final response = await http.post(
-      Uri.parse('${ApiConstants.baseUrl}/orders'),
-      headers: headers,
-      body: body,
-    );
-
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      return jsonDecode(response.body);
-    } else {
-      throw Exception('Failed to create order: ${response.body}');
     }
   }
 
@@ -867,7 +846,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
-      return json['data'];
+      return json['data'] ?? json;
     } else {
       throw Exception('Failed to get driver location');
     }
@@ -950,6 +929,56 @@ class ApiService {
     }
   }
 
+// --- CHAT (Fitur Pesan) ---
+  Future<List<ChatMessage>> getChatMessages(int orderId) async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/messages'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((e) => ChatMessage.fromJson(e)).toList();
+    } else if (response.statusCode == 403) {
+      throw Exception('Tidak memiliki akses ke chat ini');
+    } else {
+      throw Exception('Gagal mengambil pesan: ${response.body}');
+    }
+  }
+
+  Future<ChatMessage> sendChatMessage(int orderId, String message) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/messages'),
+      headers: headers,
+      body: jsonEncode({'message': message}),
+    );
+
+    if (response.statusCode == 201) {
+      return ChatMessage.fromJson(jsonDecode(response.body));
+    } else if (response.statusCode == 400) {
+      throw Exception('Chat belum tersedia (driver belum di-assign)');
+    } else {
+      throw Exception('Gagal mengirim pesan: ${response.body}');
+    }
+  }
+
+  Future<List<ChatOrder>> getChatList() async {
+    final headers = await _getHeaders();
+    final response = await http.get(
+      Uri.parse('${ApiConstants.baseUrl}/chat-list'),
+      headers: headers,
+    );
+
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      return data.map((e) => ChatOrder.fromJson(e)).toList();
+    } else {
+      throw Exception('Gagal mengambil daftar chat');
+    }
+  }
+
   // ================= POINTS & REWARDS =================
 
   /// Get user's current PBC points
@@ -989,6 +1018,24 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception('Failed to get rewards data: ${response.body}');
+    }
+  }
+
+  Future<Order> createOrder(Map<String, dynamic> orderData) async {
+    final headers = await _getHeaders();
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/orders'),
+      headers: headers,
+      body: jsonEncode(orderData),
+    );
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      final order =
+          (data is Map && data.containsKey('data')) ? data['data'] : data;
+      return Order.fromJson(order);
+    } else {
+      throw Exception('Failed to create order: ${response.body}');
     }
   }
 }
