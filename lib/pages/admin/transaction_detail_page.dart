@@ -14,28 +14,38 @@ class TransactionDetailPage extends StatefulWidget {
 
 class _TransactionDetailPageState extends State<TransactionDetailPage> {
   late String _currentStatus;
+  late String _currentPaymentStatus;
 
   @override
   void initState() {
     super.initState();
     _currentStatus = widget.order.status;
+    _currentPaymentStatus = widget.order.paymentStatus ?? 'unpaid';
   }
 
-  void _updateStatus(String newStatus) async {
+  void _updateStatus(String newStatus, String newPaymentStatus) async {
     final provider =
         Provider.of<AdminTransactionProvider>(context, listen: false);
     try {
-      await provider.updateStatus(widget.order.id, newStatus);
+      await provider.updateStatus(widget.order.id, newStatus,
+          paymentStatus: newPaymentStatus);
       setState(() {
         _currentStatus = newStatus;
+        _currentPaymentStatus = newPaymentStatus;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Status updated to $newStatus')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+              content:
+                  Text('Updated: $newStatus | Payment: $newPaymentStatus')),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e')),
+        );
+      }
     }
   }
 
@@ -101,7 +111,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                   title: Text(item.product?.name ?? 'Unknown Product'),
                   subtitle: Text('Qty: ${item.quantity}'),
                   trailing: Text(
-                      '\$${(item.price * item.quantity).toStringAsFixed(2)}'),
+                      'Rp ${(item.price * item.quantity).toStringAsFixed(0)}'),
                 );
               },
             ),
@@ -114,7 +124,7 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
                   const Text('Total Price',
                       style:
                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  Text('\$${widget.order.totalPrice.toStringAsFixed(2)}',
+                  Text('Rp ${widget.order.totalPrice.toStringAsFixed(0)}',
                       style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -135,41 +145,71 @@ class _TransactionDetailPageState extends State<TransactionDetailPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Current Status:', style: TextStyle(color: Colors.grey)),
-            Row(
-              children: [
-                Text(_currentStatus.toUpperCase(),
-                    style: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
-                const Spacer(),
-                PopupMenuButton<String>(
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(
-                        color: Colors.brown,
-                        borderRadius: BorderRadius.circular(8)),
-                    child: const Text('Update Status',
-                        style: TextStyle(color: Colors.white)),
-                  ),
-                  onSelected: _updateStatus,
-                  itemBuilder: (context) => [
-                    'pending',
-                    'paid',
-                    'processing',
-                    'shipped',
-                    'completed',
-                    'cancelled'
-                  ]
-                      .map((s) =>
-                          PopupMenuItem(value: s, child: Text(s.toUpperCase())))
-                      .toList(),
-                ),
+            const Text('Update Status:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            // status selection
+            _buildDropdown(
+              label: 'Order Status',
+              value: _currentStatus,
+              items: [
+                'pending',
+                'paid',
+                'processing',
+                'shipped',
+                'completed',
+                'cancelled'
               ],
+              onChanged: (val) {
+                if (val != null) _updateStatus(val, _currentPaymentStatus);
+              },
+            ),
+            const SizedBox(height: 16),
+            // payment status selection
+            _buildDropdown(
+              label: 'Payment Status',
+              value: _currentPaymentStatus,
+              items: ['unpaid', 'paid', 'failed'],
+              onChanged: (val) {
+                if (val != null) _updateStatus(_currentStatus, val);
+              },
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String label,
+    required String value,
+    required List<String> items,
+    required Function(String?) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 4),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: items.contains(value) ? value : items.first,
+              items: items
+                  .map((s) =>
+                      DropdownMenuItem(value: s, child: Text(s.toUpperCase())))
+                  .toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

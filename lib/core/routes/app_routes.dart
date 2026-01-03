@@ -134,7 +134,10 @@ class AppRoutes {
           builder: (_) => const DeliveryTrackerPage(),
         );
       case orderReview:
-        return MaterialPageRoute(builder: (_) => const OrderReviewPage());
+        final order = settings.arguments as Order;
+        return MaterialPageRoute(builder: (_) => OrderReviewPage(order: order));
+
+      // ===== Lokasi Toko =====
       case storeLocation:
         return MaterialPageRoute(builder: (_) => const StoreLocationPage());
       case checkoutPayment:

@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart'; // Import XFile
+import 'package:url_launcher/url_launcher.dart'; // Added for Google Login
 import '../data/services/api_service.dart';
 import '../data/services/auth_service.dart'; // Add this
 import '../data/models/user_model.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
+import '../core/constants/api_constants.dart';
 
 class AuthProvider with ChangeNotifier {
   final ApiService _apiService = ApiService();
@@ -37,7 +37,6 @@ class AuthProvider with ChangeNotifier {
       } catch (e) {
         debugPrint('CheckLoginStatus error: $e');
         // Only logout if explicitly unauthenticated (401)
-        // Adjust string check based on your specific 401 exception message
         if (e.toString().contains('Unauthenticated') ||
             e.toString().contains('401')) {
           await logout();
@@ -84,6 +83,68 @@ class AuthProvider with ChangeNotifier {
       _errorMessage = e.toString();
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<bool> loginGuest() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final response = await _apiService.loginGuest();
+      // Assuming response has 'access_token' similar to login
+      if (response.containsKey('access_token')) {
+        final token = response['access_token'];
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('access_token', token);
+
+        // Try to get user data from response or fetch it
+        try {
+          if (response.containsKey('user')) {
+            _user = User.fromJson(response['user']);
+          } else {
+            _user = await _apiService.getUser();
+          }
+        } catch (e) {
+          // If fetching user fails (maybe guest endpoint doesn't return full user), use dummy
+          _user = User(
+              id: 0,
+              name: 'Guest',
+              email: 'guest@biji.coffee',
+              roles: ['guest']);
+        }
+
+        if (_user != null) {
+          await _saveUserLocally(_user!);
+        }
+
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      }
+      _isLoading = false;
+      _errorMessage = 'No access token';
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> loginWithGoogle() async {
+    final url = Uri.parse(ApiConstants.googleAuthEndpoint);
+    if (await canLaunchUrl(url)) {
+      await launchUrl(
+        url,
+        mode: LaunchMode.externalApplication,
+      );
+    } else {
+      _errorMessage = 'Could not launch Google Login';
+      notifyListeners();
     }
   }
 

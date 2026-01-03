@@ -206,10 +206,20 @@ class _ProfilePageState extends State<ProfilePage> {
                             color: Colors.white,
                             size: 14), // Changed to email icon for context
                         const SizedBox(width: 6),
-                        Text(
-                          user?.email ?? 'No User', // Dynamic email
-                          style: const TextStyle(
-                              color: Colors.white70, fontSize: 15),
+                        Flexible(
+                          child: Text(
+                            ((user != null && user.roles.contains('guest')) ||
+                                    (user?.email
+                                            ?.toLowerCase()
+                                            .contains('guest') ??
+                                        false))
+                                ? 'Guest Account'
+                                : (user?.email ?? 'No User'),
+                            style: const TextStyle(
+                                color: Colors.white70, fontSize: 15),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -227,6 +237,15 @@ class _ProfilePageState extends State<ProfilePage> {
                         const SizedBox(width: 20),
                         _buildActionButton(Icons.edit, Colors.grey.shade400,
                             () {
+                          if (user != null &&
+                              (user.roles.contains('guest') ||
+                                  user.email == 'guest@biji.coffee')) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                    content:
+                                        Text("Guest cannot edit profile")));
+                            return;
+                          }
                           Navigator.pushNamed(
                             context,
                             '/edit-profile', // Use string directly or AppRoutes constant if imported

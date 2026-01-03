@@ -45,13 +45,14 @@ class AdminTransactionProvider with ChangeNotifier {
     }
   }
 
-  Future<void> updateStatus(int orderId, String newStatus) async {
+  Future<void> updateStatus(int orderId, String newStatus,
+      {String? paymentStatus}) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      final updatedOrder =
-          await _apiService.updateOrderStatus(orderId, newStatus);
+      final updatedOrder = await _apiService
+          .updateOrderStatus(orderId, newStatus, paymentStatus: paymentStatus);
 
       // Update local list
       final index = _orders.indexWhere((o) => o.id == orderId);

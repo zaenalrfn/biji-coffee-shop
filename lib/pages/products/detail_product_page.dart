@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../providers/cart_provider.dart';
 import '../../core/routes/app_routes.dart';
 import '../../data/services/wishlist_service.dart';
+import '../../data/models/cart_item_model.dart';
 
 class ProductDetailPage extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -27,7 +28,23 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
         (rawImage.startsWith('http') || rawImage.startsWith('https'));
     final String imagePath = rawImage ?? 'assets/images/placeholder.png';
     final String title = product['title'] ?? 'Produk Tanpa Nama';
-    final double price = (product['price'] ?? 0).toDouble();
+    final double basePrice = (product['price'] ?? 0).toDouble();
+
+    // Calculate dynamic price based on size
+    double getPrice() {
+      switch (selectedSize) {
+        case 'SM':
+          return basePrice * 0.9;
+        case 'LG':
+          return basePrice * 1.2;
+        case 'XL':
+          return basePrice * 1.3;
+        default:
+          return basePrice;
+      }
+    }
+
+    final double price = getPrice();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -123,10 +140,16 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                 ),
                               ),
                               const SizedBox(height: 10),
-                              const Text(
-                                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim minim venia",
+                              Text(
+                                (product['subtitle'] != null &&
+                                        product['subtitle']
+                                            .toString()
+                                            .isNotEmpty)
+                                    ? product['subtitle']
+                                    : (product['description'] ??
+                                        "No description available."),
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Colors.grey,
                                   height: 1.5,
                                 ),
@@ -183,7 +206,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                                     color: Colors.orange),
                                 const SizedBox(width: 6),
                                 Text(
-                                  "\$${price.toStringAsFixed(1)}",
+                                  "Rp ${price.toStringAsFixed(0)}",
                                   style: const TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
@@ -220,7 +243,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                         ),
                         const SizedBox(height: 20),
                         const Text(
-                          "*)Dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore",
+                          "*) Harga sudah termasuk pajak",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 12,
@@ -298,16 +321,46 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                   onPressed: () async {
                     try {
                       final int productId = product['id'];
-                      await Provider.of<CartProvider>(context, listen: false)
-                          .addToCart(productId, quantity);
+                      final cartProvider =
+                          Provider.of<CartProvider>(context, listen: false);
 
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('${title} added to cart!')),
-                        );
-                        // Navigate to Checkout (same as Cart Page)
-                        Navigator.pushNamed(
-                            context, AppRoutes.checkoutShipping);
+                      // 1. Ensure we have the latest cart data from backend
+                      await cartProvider.fetchCart();
+
+                      // 2. Check if item already exists in cart with same size
+                      print(
+                          "Checking cart for Product ID: $productId, Size: $selectedSize");
+                      final existingItem = cartProvider.cartItems.firstWhere(
+                        (item) =>
+                            item.productId == productId &&
+                            item.size == selectedSize,
+                        orElse: () =>
+                            CartItem(id: -1, productId: -1, quantity: 0),
+                      );
+
+                      if (existingItem.id != -1) {
+                        // Item exists, just navigate
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text(
+                                    'Item already in cart. Proceeding to checkout...')),
+                          );
+                          Navigator.pushNamed(
+                              context, AppRoutes.checkoutShipping);
+                        }
+                      } else {
+                        // Item doesn't exist, add it
+                        await cartProvider.addToCart(productId, quantity,
+                            size: selectedSize);
+
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('${title} added to cart!')),
+                          );
+                          Navigator.pushNamed(
+                              context, AppRoutes.checkoutShipping);
+                        }
                       }
                     } catch (e) {
                       if (context.mounted) {
@@ -324,7 +377,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                     ),
                   ),
                   child: Text(
-                    "PLACE ORDER   \$${(price * quantity).toStringAsFixed(1)}",
+                    "PLACE ORDER   Rp ${(price * quantity).toStringAsFixed(0)}",
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,

@@ -55,6 +55,29 @@
                     }
                 },
                 {
+                    "name": "Guest Login",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/login/guest",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "login",
+                                "guest"
+                            ]
+                        }
+                    }
+                },
+                {
                     "name": "Register",
                     "event": [
                         {
@@ -614,6 +637,37 @@
                     }
                 },
                 {
+                    "name": "Add to Cart (XL - 30% Extra)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"product_id\": 1,\n    \"quantity\": 1,\n    \"notes\": \"Test XL Price\",\n    \"size\": \"XL\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/cart",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "cart"
+                            ]
+                        }
+                    }
+                },
+                {
                     "name": "Cart - Show Item",
                     "request": {
                         "method": "GET",
@@ -1023,6 +1077,40 @@
                     }
                 },
                 {
+                    "name": "Admin - Assign Driver",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"driver_id\": 2\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/orders/1/assign-driver",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "orders",
+                                "1",
+                                "assign-driver"
+                            ]
+                        }
+                    }
+                },
+                {
                     "name": "Admin - Update Order",
                     "request": {
                         "method": "POST",
@@ -1126,7 +1214,33 @@
                     }
                 },
                 {
-                    "name": "Midtrans Callback (System)",
+                    "name": "Midtrans Callback (System Simulation)",
+                    "event": [
+                        {
+                            "listen": "prerequest",
+                            "script": {
+                                "exec": [
+                                    "// Get values from environment or hardcoded for test",
+                                    "var serverKey = pm.environment.get(\"midtrans_server_key\"); // Need to add this to env",
+                                    "var orderId = \"ORDER-12345\"; // Change this to match a real order in your DB",
+                                    "var statusCode = \"200\";",
+                                    "var grossAmount = \"25000.00\"; // Ensure 2 decimal places string matching DB",
+                                    "",
+                                    "// Create Signature: SHA512(order_id+status_code+gross_amount+ServerKey)",
+                                    "var signatureInput = orderId + statusCode + grossAmount + serverKey;",
+                                    "var signatureKey = CryptoJS.SHA512(signatureInput).toString();",
+                                    "",
+                                    "// Set variables for the body",
+                                    "pm.environment.set(\"sim_order_id\", orderId);",
+                                    "pm.environment.set(\"sim_status_code\", statusCode);",
+                                    "pm.environment.set(\"sim_gross_amount\", grossAmount);",
+                                    "pm.environment.set(\"sim_signature_key\", signatureKey);",
+                                    "console.log(\"Signature Generated: \" + signatureKey);"
+                                ],
+                                "type": "text/javascript"
+                            }
+                        }
+                    ],
                     "request": {
                         "method": "POST",
                         "header": [
@@ -1148,7 +1262,7 @@
                         },
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \n}",
+                            "raw": "{\n    \"transaction_status\": \"settlement\",\n    \"order_id\": \"{{sim_order_id}}\",\n    \"status_code\": \"{{sim_status_code}}\",\n    \"gross_amount\": \"{{sim_gross_amount}}\",\n    \"signature_key\": \"{{sim_signature_key}}\"\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1601,7 +1715,7 @@
             ]
         },
         {
-            "name": "08. Google OAuth",
+            "name": "08. OAuth",
             "item": [
                 {
                     "name": "Google Login",
@@ -1622,6 +1736,29 @@
                                 "api",
                                 "oauth",
                                 "google"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Facebook Login",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/oauth/facebook",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "oauth",
+                                "facebook"
                             ]
                         }
                     }
@@ -1653,153 +1790,7 @@
             ]
         },
         {
-            "name": "09. Notifications",
-            "item": [
-                {
-                    "name": "List Notifications",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/notifications",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "notifications"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Mark As Read",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/notifications/1/read",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "notifications",
-                                "1",
-                                "read"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Mark All Read",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/notifications/read-all",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "notifications",
-                                "read-all"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Delete All Notifications",
-                    "request": {
-                        "method": "DELETE",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/notifications/delete-all",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "notifications",
-                                "delete-all"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "10. Points & Rewards",
-            "item": [
-                {
-                    "name": "Get User Points",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/points",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "points"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Get Rewards Page",
-                    "request": {
-                        "method": "GET",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "url": {
-                            "raw": "{{base_url}}/api/rewards",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "rewards"
-                            ]
-                        }
-                    }
-                }
-            ]
-        },
-        {
-            "name": "11. Driver & Delivery",
+            "name": "09. Drivers",
             "item": [
                 {
                     "name": "List Active Drivers",
@@ -1859,7 +1850,7 @@
                         ],
                         "body": {
                             "mode": "raw",
-                            "raw": "{\n    \"latitude\": 3.5852,\n    \"longitude\": 98.6756\n}",
+                            "raw": "{\n    \"latitude\": -6.200000,\n    \"longitude\": 106.816666\n}",
                             "options": {
                                 "raw": {
                                     "language": "json"
@@ -1881,7 +1872,7 @@
                     }
                 },
                 {
-                    "name": "Driver - List Orders",
+                    "name": "Driver Dashboard (Orders)",
                     "request": {
                         "method": "GET",
                         "header": [
@@ -1904,7 +1895,7 @@
                     }
                 },
                 {
-                    "name": "Driver - Update Order Status",
+                    "name": "Update Order Status (Driver)",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -1936,78 +1927,11 @@
                             ]
                         }
                     }
-                },
-                {
-                    "name": "Update Order Status",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"status\": \"completed\"\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/api/orders/1/update-status",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "orders",
-                                "1",
-                                "update-status"
-                            ]
-                        }
-                    }
-                },
-                {
-                    "name": "Admin - Assign Driver",
-                    "request": {
-                        "method": "POST",
-                        "header": [
-                            {
-                                "key": "Accept",
-                                "value": "application/json"
-                            }
-                        ],
-                        "body": {
-                            "mode": "raw",
-                            "raw": "{\n    \"driver_id\": 1\n}",
-                            "options": {
-                                "raw": {
-                                    "language": "json"
-                                }
-                            }
-                        },
-                        "url": {
-                            "raw": "{{base_url}}/api/admin/orders/1/assign-driver",
-                            "host": [
-                                "{{base_url}}"
-                            ],
-                            "path": [
-                                "api",
-                                "admin",
-                                "orders",
-                                "1",
-                                "assign-driver"
-                            ]
-                        }
-                    }
                 }
             ]
         },
         {
-            "name": "12. Order Chat",
+            "name": "10. Chat",
             "item": [
                 {
                     "name": "Get Order Messages",
@@ -2034,7 +1958,7 @@
                     }
                 },
                 {
-                    "name": "Send Order Message",
+                    "name": "Send Message",
                     "request": {
                         "method": "POST",
                         "header": [
@@ -2062,6 +1986,162 @@
                                 "orders",
                                 "1",
                                 "messages"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {},
+        {
+            "name": "11. Coupons (Admin & User)",
+            "item": [
+                {
+                    "name": "List Available Coupons (User)",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "coupons"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin - List Coupons",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "coupons"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin - Create Coupon",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n    \"code\": \"WELCOME50\",\n    \"type\": \"percent\",\n    \"value\": 50,\n    \"min_purchase\": 20000,\n    \"expires_at\": \"2025-12-31 23:59:59\"\n}",
+                            "options": {
+                                "raw": {
+                                    "language": "json"
+                                }
+                            }
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/coupons",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "coupons"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Admin - Delete Coupon",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/admin/coupons/1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "admin",
+                                "coupons",
+                                "1"
+                            ]
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "12. Membership (Points & Rewards)",
+            "item": [
+                {
+                    "name": "Get My Points",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/points",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "points"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "List Rewards",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "Accept",
+                                "value": "application/json"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/rewards",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "rewards"
                             ]
                         }
                     }

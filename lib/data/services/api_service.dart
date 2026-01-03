@@ -52,6 +52,22 @@ class ApiService {
     }
   }
 
+  Future<Map<String, dynamic>> loginGuest() async {
+    final response = await http.post(
+      Uri.parse('${ApiConstants.baseUrl}/login/guest'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to login as guest: ${response.body}');
+    }
+  }
+
   Future<Map<String, dynamic>> register(
       String name, String email, String password) async {
     final response = await http.post(
@@ -584,12 +600,18 @@ class ApiService {
     }
   }
 
-  Future<void> addToCart(int productId, int quantity) async {
+  Future<void> addToCart(int productId, int quantity, {String? size}) async {
     final headers = await _getHeaders();
+    final body = {
+      'product_id': productId,
+      'quantity': quantity,
+      if (size != null) 'size': size,
+    };
+
     final response = await http.post(
       Uri.parse('${ApiConstants.baseUrl}/cart'),
       headers: headers,
-      body: jsonEncode({'product_id': productId, 'quantity': quantity}),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
@@ -679,13 +701,19 @@ class ApiService {
   }
 
   // Admin: Update Order Status
-  Future<Order> updateOrderStatus(int id, String status) async {
+  Future<Order> updateOrderStatus(int id, String status,
+      {String? paymentStatus}) async {
     final headers = await _getHeaders();
+    final body = {
+      'status': status,
+      if (paymentStatus != null) 'payment_status': paymentStatus,
+    };
+
     final response = await http.post(
       Uri.parse(
           '${ApiConstants.baseUrl}/admin/orders/$id'), // Corrected Endpoint
       headers: headers,
-      body: jsonEncode({'status': status}),
+      body: jsonEncode(body),
     );
 
     if (response.statusCode == 200) {
@@ -965,9 +993,12 @@ class ApiService {
       final data = jsonDecode(response.body);
       // Handle different possible response formats
       if (data is Map && data.containsKey('points')) {
-        return data['points'] as int;
-      } else if (data is Map && data.containsKey('data')) {
-        return data['data']['points'] as int;
+        return int.tryParse(data['points'].toString()) ?? 0;
+      } else if (data is Map &&
+          data.containsKey('data') &&
+          data['data'] is Map &&
+          data['data'].containsKey('points')) {
+        return int.tryParse(data['data']['points'].toString()) ?? 0;
       }
       return 0;
     } else {

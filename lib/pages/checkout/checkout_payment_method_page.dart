@@ -32,6 +32,9 @@ class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
     final orderProvider = Provider.of<OrderProvider>(context, listen: false);
     final cartProvider = Provider.of<CartProvider>(context, listen: false);
 
+    // Set default payment method for Midtrans
+    orderProvider.setPaymentMethod('midtrans');
+
     try {
       final snapToken = await orderProvider.createOrder();
 
@@ -209,7 +212,7 @@ class _CheckoutPaymentMethodPageState extends State<CheckoutPaymentMethodPage> {
                               style: TextStyle(
                                   color: Colors.grey.shade600, fontSize: 16)),
                           const Spacer(),
-                          Text('\$${cart.totalPrice.toStringAsFixed(2)}',
+                          Text('Rp ${cart.totalPrice.toStringAsFixed(0)}',
                               style: const TextStyle(
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
