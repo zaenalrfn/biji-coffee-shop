@@ -13,4 +13,11 @@ class ApiConstants {
   static String get registerEndpoint => '$baseUrl/register';
   static String get userEndpoint => '$baseUrl/user';
   static String get googleAuthEndpoint => '$baseUrl/oauth/google';
+  static String get serverIp {
+    try {
+      return Uri.parse(baseUrl).host;
+    } catch (e) {
+      return 'localhost';
+    }
+  }
 }
