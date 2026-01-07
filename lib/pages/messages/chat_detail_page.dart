@@ -113,7 +113,6 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     _controller.clear();
 
     // Optimistic Update
-    // Temp ID (negative to avoid collision or large int)
     final tempMsg = ChatMessage(
       id: DateTime.now().millisecondsSinceEpoch,
       senderId: _currentUserId!,
@@ -130,23 +129,79 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final token = await _authService.getToken();
     if (token != null) {
       try {
+        print("📤 Sending message to order $_orderId: $text");
         final sentMsg = await _apiService.sendChatMessage(_orderId!, text);
-        // Ideally replace optimistic message with real one
+
+        // Replace optimistic message with real message from server
         setState(() {
-          // Find tempMsg and replace or just ensure data consistency
-          // For simplicity, we might just assume it worked or reload.
-          // If the ID changes from server response, we should update it.
-          // But strict "replace" logic requires finding the index.
           final index = _messages.indexOf(tempMsg);
           if (index != -1) {
             _messages[index] = sentMsg;
           }
         });
+
+        print("✅ Message sent successfully: ${sentMsg.id}");
       } catch (e) {
-        // Revert optimistic update on failure?
-        print("Send failed: $e");
+        print("❌ Send failed: $e");
+
+        // Revert optimistic update
+        setState(() {
+          _messages.remove(tempMsg);
+        });
+
+        // Show error to user
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(_getErrorMessage(e)),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 3),
+              action: SnackBarAction(
+                label: 'Tutup',
+                textColor: Colors.white,
+                onPressed: () {},
+              ),
+            ),
+          );
+        }
+      }
+    } else {
+      // No token - revert and show error
+      setState(() {
+        _messages.remove(tempMsg);
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Sesi Anda telah berakhir, silakan login kembali'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
+  }
+
+  String _getErrorMessage(dynamic error) {
+    final errorStr = error.toString();
+
+    if (errorStr.contains('403') || errorStr.contains('Unauthorized')) {
+      return 'Anda tidak memiliki akses ke chat ini';
+    } else if (errorStr.contains('400') ||
+        errorStr.contains('driver belum di-assign')) {
+      return 'Chat belum tersedia (driver belum di-assign)';
+    } else if (errorStr.contains('404')) {
+      return 'Order tidak ditemukan';
+    } else if (errorStr.contains('401')) {
+      return 'Sesi Anda telah berakhir, silakan login kembali';
+    } else if (errorStr.contains('500')) {
+      return 'Terjadi kesalahan di server, coba lagi nanti';
+    } else if (errorStr.contains('SocketException') ||
+        errorStr.contains('NetworkException')) {
+      return 'Tidak ada koneksi internet';
+    }
+
+    return 'Gagal mengirim pesan, coba lagi';
   }
 
   void _scrollToBottom() {
