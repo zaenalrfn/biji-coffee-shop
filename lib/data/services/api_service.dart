@@ -878,10 +878,20 @@ class ApiService {
       headers: headers,
     );
 
+    print('📥 Driver Orders Response Status: ${response.statusCode}');
+    print('📥 Driver Orders Response Body: ${response.body}');
+
     if (response.statusCode == 200) {
       final json = jsonDecode(response.body);
       final List data =
           (json is Map && json.containsKey('data')) ? json['data'] : json;
+
+      print('📦 Number of orders: ${data.length}');
+      if (data.isNotEmpty) {
+        print('📦 First order data: ${data[0]}');
+        print('📦 First order user: ${data[0]['user']}');
+      }
+
       return data.map((e) => Order.fromJson(e)).toList();
     } else {
       throw Exception('Failed to load driver orders: ${response.statusCode}');
