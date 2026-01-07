@@ -949,18 +949,35 @@ class ApiService {
 
   Future<ChatMessage> sendChatMessage(int orderId, String message) async {
     final headers = await _getHeaders();
+    final url = '${ApiConstants.baseUrl}/orders/$orderId/messages';
+    final body = jsonEncode({'message': message});
+
+    print('📤 POST $url');
+    print('📤 Headers: ${headers.keys.join(", ")}');
+    print('📤 Body: $body');
+
     final response = await http.post(
-      Uri.parse('${ApiConstants.baseUrl}/orders/$orderId/messages'),
+      Uri.parse(url),
       headers: headers,
-      body: jsonEncode({'message': message}),
+      body: body,
     );
+
+    print('📥 Response Status: ${response.statusCode}');
+    print('📥 Response Body: ${response.body}');
 
     if (response.statusCode == 201) {
       return ChatMessage.fromJson(jsonDecode(response.body));
     } else if (response.statusCode == 400) {
       throw Exception('Chat belum tersedia (driver belum di-assign)');
+    } else if (response.statusCode == 403) {
+      throw Exception('Unauthorized: Anda tidak memiliki akses ke chat ini');
+    } else if (response.statusCode == 404) {
+      throw Exception('Order tidak ditemukan');
+    } else if (response.statusCode == 401) {
+      throw Exception('Sesi Anda telah berakhir, silakan login kembali');
     } else {
-      throw Exception('Gagal mengirim pesan: ${response.body}');
+      throw Exception(
+          'Gagal mengirim pesan (${response.statusCode}): ${response.body}');
     }
   }
 
